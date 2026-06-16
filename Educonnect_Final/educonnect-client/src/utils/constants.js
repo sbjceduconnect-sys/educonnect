@@ -1,0 +1,11 @@
+export const ROLES = { STUDENT: 'student', TEACHER: 'teacher', ADMIN: 'admin' };
+export const STREAMS = ['11th Science', '11th Commerce', '12th Science', '12th Commerce'];
+export const ATTENDANCE_STATUS = ['present', 'absent', 'late', 'excused'];
+export const EXAM_TYPES = ['mid', 'final', 'quiz', 'assignment', 'practical'];
+export const MATERIAL_TYPES = ['note', 'pdf', 'video', 'ppt', 'question_paper'];
+export const SUBJECT_TYPES = ['theory', 'practical', 'elective'];
+export const PRIORITY_LEVELS = ['low', 'normal', 'high', 'urgent'];
+export const FEEDBACK_CATEGORIES = ['teaching', 'content', 'facilities', 'other'];
+export const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+export const GRADE_COLORS = { 'A+': '#4CAF50', 'A': '#66BB6A', 'B+': '#8BC34A', 'B': '#FFC107', 'C': '#FF9800', 'D': '#FF5722', 'F': '#F44336' };
+export const ATTENDANCE_COLORS = { present: '#4CAF50', absent: '#F44336', late: '#FF9800', excused: '#2196F3' };

@@ -1,0 +1,49 @@
+{
+  "name": "educonnect-client",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "@vitejs/plugin-react": "^6.0.2",
+    "typescript": "~6.0.2",
+    "vite": "8.0.13"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@fullcalendar/core": "^6.1.20",
+    "@fullcalendar/daygrid": "^6.1.20",
+    "@fullcalendar/interaction": "^6.1.20",
+    "@fullcalendar/react": "^6.1.20",
+    "@fullcalendar/timegrid": "^6.1.20",
+    "@hookform/resolvers": "^3.10.0",
+    "@mui/icons-material": "^5.18.0",
+    "@mui/material": "^5.18.0",
+    "@mui/x-data-grid": "^6.20.4",
+    "@mui/x-date-pickers": "^6.20.2",
+    "@tanstack/react-query": "^5.101.0",
+    "axios": "^1.17.0",
+    "dayjs": "^1.11.21",
+    "framer-motion": "^12.40.0",
+    "html5-qrcode": "^2.3.8",
+    "jwt-decode": "^4.0.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-dropzone": "^14.4.1",
+    "react-hook-form": "^7.77.0",
+    "react-hot-toast": "^2.6.0",
+    "react-qr-code": "^2.0.21",
+    "react-quill": "^2.0.0",
+    "react-router-dom": "^6.30.4",
+    "recharts": "^2.15.4",
+    "socket.io-client": "^4.8.3",
+    "xlsx": "^0.18.5",
+    "yup": "^1.7.1"
+  }
+}
