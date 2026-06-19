@@ -25,9 +25,15 @@ export function getAvatarUrl(avatar) {
     return avatar;
   }
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-  const origin = apiUrl.replace(/\/api\/?$/, '');
-  const cleanPath = avatar.startsWith('/') ? avatar : `/${avatar}`;
-  return `${origin}${cleanPath}`;
+  try {
+    const origin = new URL(apiUrl).origin;
+    const cleanPath = avatar.startsWith('/') ? avatar : `/${avatar}`;
+    return `${origin}${cleanPath}`;
+  } catch (e) {
+    const origin = apiUrl.replace(/\/api\/v1\/?$/, '').replace(/\/api\/?$/, '');
+    const cleanPath = avatar.startsWith('/') ? avatar : `/${avatar}`;
+    return `${origin}${cleanPath}`;
+  }
 }
 
 export function getGreeting() {
