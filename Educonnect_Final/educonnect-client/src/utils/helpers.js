@@ -25,6 +25,27 @@ export function getGreeting() {
   return 'Good Evening';
 }
 
+function getMimeType(filename, defaultMime = 'application/octet-stream') {
+  const ext = filename.split('.').pop().toLowerCase();
+  switch (ext) {
+    case 'pdf': return 'application/pdf';
+    case 'doc': return 'application/msword';
+    case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    case 'xls': return 'application/vnd.ms-excel';
+    case 'xlsx': return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    case 'ppt': return 'application/vnd.ms-powerpoint';
+    case 'pptx': return 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+    case 'png': return 'image/png';
+    case 'jpg':
+    case 'jpeg': return 'image/jpeg';
+    case 'txt': return 'text/plain';
+    case 'csv': return 'text/csv';
+    case 'zip': return 'application/zip';
+    default:
+      return (!defaultMime || defaultMime === 'application/octet-stream') ? 'application/pdf' : defaultMime;
+  }
+}
+
 export async function downloadBlob(blob, filename) {
   const sizeKB = (blob.size / 1024).toFixed(1);
   
@@ -72,7 +93,7 @@ export async function downloadBlob(blob, filename) {
       // 4. Open the file natively using FileOpener
       await FileOpener.open({
         filePath: writeResult.uri,
-        contentType: blob.type || 'application/pdf',
+        contentType: getMimeType(filename, blob.type),
         openWithDefault: true
       });
     } catch (err) {
