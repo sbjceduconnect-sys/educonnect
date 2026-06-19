@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import { Filesystem, Directory } from '@capacitor/filesystem';
+import { FileOpener } from '@capacitor-community/file-opener';
 import { Capacitor } from '@capacitor/core';
 import toast from 'react-hot-toast';
 
@@ -25,6 +26,8 @@ export function getGreeting() {
 }
 
 export async function downloadBlob(blob, filename) {
+  const sizeKB = (blob.size / 1024).toFixed(1);
+  
   if (Capacitor.isNativePlatform()) {
     try {
       // 1. Convert Blob to base64 string
@@ -44,14 +47,34 @@ export async function downloadBlob(blob, filename) {
       });
 
       // 2. Write file natively to public Documents folder
-      await Filesystem.writeFile({
+      const writeResult = await Filesystem.writeFile({
         path: filename,
         data: base64Data,
         directory: Directory.Documents,
         recursive: true
       });
 
-      toast.success(`Saved to Documents/${filename}`, { duration: 5000 });
+      // 3. Read header for diagnostic check
+      let header = '';
+      try {
+        const check = await Filesystem.readFile({
+          path: filename,
+          directory: Directory.Documents,
+          encoding: 'utf8'
+        });
+        header = check.data.substring(0, 15);
+      } catch (readErr) {
+        header = 'Read failed';
+      }
+
+      toast.success(`Saved: ${filename} (${sizeKB} KB) | Opening...`, { duration: 4000 });
+
+      // 4. Open the file natively using FileOpener
+      await FileOpener.open({
+        filePath: writeResult.uri,
+        contentType: blob.type || 'application/pdf',
+        openWithDefault: true
+      });
     } catch (err) {
       console.error('[EduConnect Download Error]', err);
       toast.error(`Download failed: ${err.message || String(err)}`);
