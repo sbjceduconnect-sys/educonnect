@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { useNavigate } from 'react-router-dom';
 import { Grid, Card, CardContent, Typography, Box, List, ListItem, ListItemText, ListItemIcon, Avatar, Skeleton } from '@mui/material';
 import { School, People, Announcement, EventNote, QrCode2, HistoryEdu } from '@mui/icons-material';
@@ -16,6 +17,11 @@ export default function TeacherDashboard() {
   const { accessToken } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [chartWidth, setChartWidth] = useState(300);
+
+  useEffect(() => {
+    setChartWidth(Math.min(window.innerWidth - 64, 800));
+  }, []);
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -65,16 +71,26 @@ export default function TeacherDashboard() {
               <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Students per Course</Typography>
                 {courseData.length > 0 ? (
-                  <Box sx={{ height: 280 }}>
-                    <ResponsiveContainer>
-                      <BarChart data={courseData}>
+                  <Box sx={{ height: 280, width: '100%', overflow: 'hidden' }}>
+                    {Capacitor.isNativePlatform() ? (
+                      <BarChart width={chartWidth} height={280} data={courseData}>
                         <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                         <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                         <YAxis tick={{ fontSize: 12 }} />
                         <Tooltip />
                         <Bar dataKey="students" fill="#6C63FF" radius={[6, 6, 0, 0]} />
                       </BarChart>
-                    </ResponsiveContainer>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={courseData}>
+                          <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                          <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                          <YAxis tick={{ fontSize: 12 }} />
+                          <Tooltip />
+                          <Bar dataKey="students" fill="#6C63FF" radius={[6, 6, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
                   </Box>
                 ) : (
                   <Box sx={{ py: 6, textAlign: 'center' }}><Typography color="text.secondary">No courses yet</Typography></Box>

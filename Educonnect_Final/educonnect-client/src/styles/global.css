@@ -174,3 +174,9 @@ body {
 .stat-card-orange { border-left: 4px solid #FF9800; }
 .stat-card-purple { border-left: 4px solid #6C63FF; }
 .stat-card-red { border-left: 4px solid #F44336; }
+
+html, body, #root, #root > div {
+  max-width: 100vw;
+  overflow-x: hidden !important;
+  width: 100%;
+}

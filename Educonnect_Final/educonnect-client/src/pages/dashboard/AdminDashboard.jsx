@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { useNavigate } from 'react-router-dom';
 import { Grid, Card, CardContent, Typography, Box, List, ListItem, ListItemText, ListItemIcon, Avatar, Chip, Button, Skeleton } from '@mui/material';
 import { People, School, AdminPanelSettings, Pending, Announcement, Assessment, PersonAdd, CheckCircle } from '@mui/icons-material';
@@ -16,6 +17,11 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [chartWidth, setChartWidth] = useState(300);
+
+  useEffect(() => {
+    setChartWidth(Math.min(window.innerWidth - 64, 600));
+  }, []);
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -69,16 +75,26 @@ export default function AdminDashboard() {
             <Card sx={{ borderRadius: '16px', height: '100%' }}>
               <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>User Distribution</Typography>
-                <Box sx={{ height: 250 }}>
-                  <ResponsiveContainer>
-                    <BarChart data={userChart} layout="vertical">
+                <Box sx={{ height: 250, width: '100%', overflow: 'hidden' }}>
+                  {Capacitor.isNativePlatform() ? (
+                    <BarChart width={chartWidth} height={250} data={userChart} layout="vertical">
                       <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                       <XAxis type="number" tick={{ fontSize: 12 }} />
                       <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={70} />
                       <Tooltip />
                       <Bar dataKey="count" fill="#6C63FF" radius={[0, 6, 6, 0]} barSize={30} />
                     </BarChart>
-                  </ResponsiveContainer>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={userChart} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                        <XAxis type="number" tick={{ fontSize: 12 }} />
+                        <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={70} />
+                        <Tooltip />
+                        <Bar dataKey="count" fill="#6C63FF" radius={[0, 6, 6, 0]} barSize={30} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
                 </Box>
               </CardContent>
             </Card>

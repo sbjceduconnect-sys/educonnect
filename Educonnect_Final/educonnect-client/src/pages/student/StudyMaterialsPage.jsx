@@ -29,6 +29,8 @@ import { setAuthHeader } from '../../api/axiosInstance';
 import PageHeader from '../../components/common/PageHeader';
 import DataTable from '../../components/common/DataTable';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
+import PermissionRationaleDialog from '../../components/common/PermissionRationaleDialog';
+import { useAppPermissions } from '../../hooks/useAppPermissions';
 import { downloadBlob } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
@@ -36,6 +38,7 @@ export default function StudyMaterialsPage() {
   const { user, accessToken } = useAuth();
   const location = useLocation();
   const theme = useTheme();
+  const { requestStoragePermission, isNative } = useAppPermissions();
 
   // If path is '/question-papers', we focus only on exam papers
   const isQuestionPapersView = location.pathname === '/question-papers';
@@ -64,6 +67,11 @@ export default function StudyMaterialsPage() {
   });
   const [uploadFile, setUploadFile] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Storage permission rationale dialog state
+  // pendingStorageAction holds the action (upload/download) to run after permission
+  const [storageRationaleOpen, setStorageRationaleOpen] = useState(false);
+  const [pendingStorageAction, setPendingStorageAction] = useState(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -96,17 +104,55 @@ export default function StudyMaterialsPage() {
     fetchData();
   }, [accessToken, location.pathname]);
 
+  // ── Storage permission gating ─────────────────────────────────────────────
+  /**
+   * Called after user confirms the storage rationale dialog.
+   * Requests native storage permission, then runs the pending action
+   * (upload dialog open, or download) if granted.
+   */
+  const handleStorageRationaleConfirm = async () => {
+    setStorageRationaleOpen(false);
+    setTimeout(async () => {
+      const granted = await requestStoragePermission();
+      if (granted) {
+        if (pendingStorageAction) {
+          pendingStorageAction();
+          setPendingStorageAction(null);
+        }
+      } else {
+        toast.error(
+          'Storage permission denied. Please enable it in Device Settings → Apps → EduConnect → Permissions.',
+          { duration: 5000 }
+        );
+      }
+    }, 200);
+  };
+
+  /**
+   * Gated upload dialog opener.
+   * On native: shows rationale dialog first.
+   * On web: opens dialog directly.
+   */
   const handleOpenCreate = () => {
-    setSelectedMaterial(null);
-    setUploadFile(null);
-    setFormData({
-      title: '',
-      description: '',
-      courseId: '',
-      subjectId: '',
-      type: isQuestionPapersView ? 'question_paper' : 'pdf',
-    });
-    setOpenDialog(true);
+    const openUploadDialog = () => {
+      setSelectedMaterial(null);
+      setUploadFile(null);
+      setFormData({
+        title: '',
+        description: '',
+        courseId: '',
+        subjectId: '',
+        type: isQuestionPapersView ? 'question_paper' : 'pdf',
+      });
+      setOpenDialog(true);
+    };
+
+    if (isNative) {
+      setPendingStorageAction(() => openUploadDialog);
+      setStorageRationaleOpen(true);
+    } else {
+      openUploadDialog();
+    }
   };
 
   const handleDeleteTrigger = (material) => {
@@ -150,19 +196,29 @@ export default function StudyMaterialsPage() {
     }
   };
 
-  // Download File helper
+  /**
+   * Gated download handler.
+   * On native: shows rationale dialog first, then downloads.
+   * On web: downloads directly (browser handles its own permissions).
+   */
   const handleDownload = async (material) => {
-    try {
-      setAuthHeader(accessToken);
-      const res = await materialApi.download(material.id);
-      
-      // Extract filename from originalName or use title
-      const filename = material.originalName || `${material.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
+    const doDownload = async () => {
+      try {
+        setAuthHeader(accessToken);
+        const res = await materialApi.download(material.id);
+        const filename = material.originalName || `${material.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
+        downloadBlob(res.data, filename);
+        toast.success('Download started!');
+      } catch (err) {
+        toast.error('Failed to download file');
+      }
+    };
 
-      downloadBlob(res.data, filename);
-      toast.success('Download started!');
-    } catch (err) {
-      toast.error('Failed to download file');
+    if (isNative) {
+      setPendingStorageAction(() => doDownload);
+      setStorageRationaleOpen(true);
+    } else {
+      await doDownload();
     }
   };
 
@@ -207,6 +263,17 @@ export default function StudyMaterialsPage() {
         action={canUpload ? handleOpenCreate : null}
         actionLabel={isQuestionPapersView ? 'Upload Paper' : 'Upload Material'}
         actionIcon={<UploadFile />}
+      />
+
+      {/* Storage Permission Rationale Dialog — shown before native OS prompt */}
+      <PermissionRationaleDialog
+        open={storageRationaleOpen}
+        permissionType="storage"
+        onConfirm={handleStorageRationaleConfirm}
+        onDismiss={() => {
+          setStorageRationaleOpen(false);
+          setPendingStorageAction(null);
+        }}
       />
 
       {loading ? (

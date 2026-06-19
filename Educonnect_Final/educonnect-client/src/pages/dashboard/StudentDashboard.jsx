@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { Grid, Card, CardContent, Typography, Box, LinearProgress, Chip, List, ListItem, ListItemText, ListItemIcon, Avatar, Skeleton } from '@mui/material';
 import { School, Assessment, FactCheck, Announcement, CalendarMonth, TrendingUp, MenuBook } from '@mui/icons-material';
 import { motion } from 'framer-motion';
@@ -16,6 +17,11 @@ export default function StudentDashboard() {
   const { accessToken } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [chartWidth, setChartWidth] = useState(300);
+
+  useEffect(() => {
+    setChartWidth(Math.min(window.innerWidth - 64, 800));
+  }, []);
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -84,9 +90,9 @@ export default function StudentDashboard() {
                 <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Attendance Overview</Typography>
                 {data?.attendance?.totalClasses > 0 ? (
                   <>
-                    <Box sx={{ height: 200 }}>
-                      <ResponsiveContainer>
-                        <PieChart>
+                    <Box sx={{ height: 200, width: '100%', overflow: 'hidden' }}>
+                      {Capacitor.isNativePlatform() ? (
+                        <PieChart width={Math.min(chartWidth, 320)} height={200}>
                           <Pie data={attendanceData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={5} dataKey="value">
                             {attendanceData.map((entry, i) => (
                               <Cell key={i} fill={i === 0 ? '#4CAF50' : '#F44336'} />
@@ -94,7 +100,18 @@ export default function StudentDashboard() {
                           </Pie>
                           <Tooltip />
                         </PieChart>
-                      </ResponsiveContainer>
+                      ) : (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie data={attendanceData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={5} dataKey="value">
+                              {attendanceData.map((entry, i) => (
+                                <Cell key={i} fill={i === 0 ? '#4CAF50' : '#F44336'} />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      )}
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, mt: 1 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -124,9 +141,9 @@ export default function StudentDashboard() {
               <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Recent Results</Typography>
                 {performanceData.length > 0 ? (
-                  <Box sx={{ height: 240 }}>
-                    <ResponsiveContainer>
-                      <AreaChart data={performanceData}>
+                  <Box sx={{ height: 240, width: '100%', overflow: 'hidden' }}>
+                    {Capacitor.isNativePlatform() ? (
+                      <AreaChart width={chartWidth} height={240} data={performanceData}>
                         <defs>
                           <linearGradient id="colorPercentage" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#6C63FF" stopOpacity={0.3} />
@@ -138,7 +155,22 @@ export default function StudentDashboard() {
                         <Tooltip />
                         <Area type="monotone" dataKey="percentage" stroke="#6C63FF" strokeWidth={2} fill="url(#colorPercentage)" />
                       </AreaChart>
-                    </ResponsiveContainer>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={performanceData}>
+                          <defs>
+                            <linearGradient id="colorPercentage" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#6C63FF" stopOpacity={0.3} />
+                              <stop offset="95%" stopColor="#6C63FF" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                          <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
+                          <Tooltip />
+                          <Area type="monotone" dataKey="percentage" stroke="#6C63FF" strokeWidth={2} fill="url(#colorPercentage)" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    )}
                   </Box>
                 ) : (
                   <Box sx={{ py: 6, textAlign: 'center' }}>

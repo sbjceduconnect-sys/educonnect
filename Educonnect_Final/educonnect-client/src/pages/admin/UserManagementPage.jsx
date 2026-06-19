@@ -268,12 +268,12 @@ export default function UserManagementPage() {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'users_import_template.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
+    link.href = url;
+    link.download = 'users_import_template.csv';
     link.click();
-    document.body.removeChild(link);
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 150);
   };
 
   const handleBulkDelete = async (e) => {

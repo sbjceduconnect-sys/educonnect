@@ -1,4 +1,7 @@
 import dayjs from 'dayjs';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Capacitor } from '@capacitor/core';
+import toast from 'react-hot-toast';
 
 export function formatDate(date, format = 'DD MMM YYYY') {
   if (!date) return 'N/A';
@@ -21,15 +24,49 @@ export function getGreeting() {
   return 'Good Evening';
 }
 
-export function downloadBlob(blob, filename) {
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  window.URL.revokeObjectURL(url);
+export async function downloadBlob(blob, filename) {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      // 1. Convert Blob to base64 string
+      const base64Data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result;
+          if (typeof result === 'string') {
+            const base64 = result.split(',')[1];
+            resolve(base64);
+          } else {
+            reject(new Error('FileReader result is not a string'));
+          }
+        };
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(blob);
+      });
+
+      // 2. Write file natively to public Documents folder
+      await Filesystem.writeFile({
+        path: filename,
+        data: base64Data,
+        directory: Directory.Documents,
+        recursive: true
+      });
+
+      toast.success(`Saved to Documents/${filename}`, { duration: 5000 });
+    } catch (err) {
+      console.error('[EduConnect Download Error]', err);
+      toast.error(`Download failed: ${err.message || String(err)}`);
+    }
+  } else {
+    // Web Fallback
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+    }, 150);
+  }
 }
 
 export function getAttendanceColor(percentage) {

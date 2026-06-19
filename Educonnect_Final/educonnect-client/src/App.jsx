@@ -1,5 +1,6 @@
-import React, { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense, lazy, useEffect } from 'react';
+import { BrowserRouter, HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 import { Toaster } from 'react-hot-toast';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -8,6 +9,7 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import LoadingScreen from './components/LoadingScreen';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './components/layout/DashboardLayout';
+import { useAppPermissions } from './hooks/useAppPermissions';
 
 // Lazy-loaded common/auth pages
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
@@ -88,13 +90,39 @@ function FeaturePage({ title, subtitle }) {
   return <ComingSoonPage title={title} subtitle={subtitle} />;
 }
 
+const RouterComponent = Capacitor.isNativePlatform() ? HashRouter : BrowserRouter;
+
+/**
+ * AppBootstrap — fires once on mount (native only) to request POST_NOTIFICATIONS
+ * permission on Android 13+ (API 33+). Principle of Least Privilege: this is the
+ * earliest meaningful moment to ask, before the user navigates to any screen.
+ * On web and older Android, requestNotificationPermission() returns true immediately.
+ */
+function AppBootstrap() {
+  const { requestNotificationPermission, isNative } = useAppPermissions();
+
+  useEffect(() => {
+    if (isNative) {
+      // Slight delay so the app finishes rendering before the OS dialog appears
+      const timer = setTimeout(() => {
+        requestNotificationPermission();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isNative, requestNotificationPermission]);
+
+  return null; // renders nothing — pure side-effect component
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
           <NotificationProvider>
-            <BrowserRouter>
+            <RouterComponent>
+              {/* Request POST_NOTIFICATIONS (API 33+) once on first app load */}
+              <AppBootstrap />
               <Suspense fallback={<LoadingScreen />}>
                 <Routes>
                   {/* Public routes */}
@@ -146,7 +174,7 @@ export default function App() {
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </Suspense>
-            </BrowserRouter>
+            </RouterComponent>
 
             <Toaster
               position="top-right"

@@ -4,7 +4,7 @@ import {
   Box, Card, CardContent, TextField, Button, Typography, IconButton, InputAdornment,
   Alert, Divider, CircularProgress, useTheme,
 } from '@mui/material';
-import { Visibility, VisibilityOff, Google, Login as LoginIcon } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Login as LoginIcon } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { setAuthHeader } from '../../api/axiosInstance';
@@ -42,10 +42,6 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleGoogleLogin = () => {
-    window.location.href = `${API_URL}/auth/google`;
   };
 
   return (
@@ -194,27 +190,6 @@ export default function LoginPage() {
                 {loading ? 'Signing In...' : 'Sign In'}
               </Button>
             </form>
-
-            <Divider sx={{ my: 3 }}>
-              <Typography variant="caption" color="text.secondary">OR</Typography>
-            </Divider>
-
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<Google />}
-              onClick={handleGoogleLogin}
-              sx={{
-                py: 1.2,
-                borderRadius: '12px',
-                borderColor: 'divider',
-                color: 'text.primary',
-                fontWeight: 600,
-                '&:hover': { borderColor: 'secondary.main', bgcolor: 'rgba(108, 99, 255, 0.04)' },
-              }}
-            >
-              Continue with Google
-            </Button>
 
             <Box sx={{ mt: 3, textAlign: 'center' }}>
               <Typography variant="body2" color="text.secondary">

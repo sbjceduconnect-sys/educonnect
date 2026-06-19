@@ -10,6 +10,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Capacitor } from '@capacitor/core';
 import { useAuth } from '../../contexts/AuthContext';
 import { useThemeMode } from '../../contexts/ThemeContext';
 import { useNotifications } from '../../contexts/NotificationContext';
@@ -105,6 +106,7 @@ export default function Topbar({ onMenuClick, sidebarOpen }) {
           : 'rgba(255, 255, 255, 0.85)',
         borderBottom: `1px solid ${theme.palette.divider}`,
         color: 'text.primary',
+        pt: Capacitor.isNativePlatform() ? 'env(safe-area-inset-top)' : 0,
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 1, sm: 2 } }}>

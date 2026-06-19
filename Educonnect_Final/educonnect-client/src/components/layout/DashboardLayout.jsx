@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Box, useMediaQuery, useTheme } from '@mui/material';
+import { Capacitor } from '@capacitor/core';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 
@@ -30,6 +31,8 @@ export default function DashboardLayout() {
           flexGrow: 1,
           ml: { md: 0 },
           width: { md: `calc(100% - ${sidebarOpen ? SIDEBAR_WIDTH : SIDEBAR_COLLAPSED}px)` },
+          maxWidth: '100vw',
+          overflowX: 'hidden',
           transition: 'all 0.3s ease',
           minHeight: '100vh',
           bgcolor: 'background.default',
@@ -39,7 +42,7 @@ export default function DashboardLayout() {
           onMenuClick={() => setMobileOpen(true)}
           sidebarOpen={sidebarOpen}
         />
-        <Box sx={{ mt: '64px', p: { xs: 2, sm: 3 } }}>
+        <Box sx={{ mt: Capacitor.isNativePlatform() ? 'calc(64px + env(safe-area-inset-top))' : '64px', p: { xs: 2, sm: 3 }, width: '100%', overflowX: 'hidden' }}>
           <Outlet />
         </Box>
       </Box>

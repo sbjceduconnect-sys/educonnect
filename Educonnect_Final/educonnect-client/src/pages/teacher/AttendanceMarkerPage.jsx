@@ -35,10 +35,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { courseApi, attendanceApi, subjectApi } from '../../api';
 import { setAuthHeader } from '../../api/axiosInstance';
 import PageHeader from '../../components/common/PageHeader';
+import PermissionRationaleDialog from '../../components/common/PermissionRationaleDialog';
+import { useAppPermissions } from '../../hooks/useAppPermissions';
 import toast from 'react-hot-toast';
 
 export default function AttendanceMarkerPage() {
   const { user, accessToken } = useAuth();
+  const { requestCameraPermission, isNative } = useAppPermissions();
+
   const [activeTab, setActiveTab] = useState(0);
   const [courses, setCourses] = useState([]);
   const [selectedCourseId, setSelectedCourseId] = useState('');
@@ -62,6 +66,12 @@ export default function AttendanceMarkerPage() {
   // Past attendance records states
   const [pastRecords, setPastRecords] = useState([]);
   const [pastLoading, setPastLoading] = useState(false);
+
+  // Camera permission rationale dialog state
+  // The dialog is shown once before the native OS permission prompt fires.
+  const [cameraRationaleOpen, setCameraRationaleOpen] = useState(false);
+  // Pending action to run after permission is confirmed
+  const [pendingQrAction, setPendingQrAction] = useState(null);
 
   // Fetch teacher's courses and subjects
   useEffect(() => {
@@ -185,7 +195,36 @@ export default function AttendanceMarkerPage() {
     }
   };
 
-  // Generate QR Code
+  // ── Internal: actually generate QR after permission is confirmed ───────────
+  const _doGenerateQR = async () => {
+    setQrLoading(true);
+    try {
+      setAuthHeader(accessToken);
+      const res = await attendanceApi.generateQR({
+        courseId: selectedCourseId,
+        subjectId: selectedSubjectId,
+        durationMinutes: qrDuration,
+      });
+      setQrToken(res.data.data.qrToken);
+      setQrTimer(qrDuration * 60);
+      toast.success('QR Code generated successfully!');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to generate QR Code');
+    } finally {
+      setQrLoading(false);
+    }
+  };
+
+  /**
+   * Generate QR Code — entry point.
+   *
+   * On native platforms: shows a rationale dialog first, then requests the
+   * CAMERA permission via @capacitor/camera before generating the QR token.
+   * On web: generates directly (browser handles camera via WebRTC if needed).
+   *
+   * Principle of Least Privilege: Camera permission is ONLY requested here,
+   * not on app mount or in any other context.
+   */
   const handleGenerateQR = async () => {
     if (!selectedCourseId) {
       toast.error('Please select a course');
@@ -195,23 +234,38 @@ export default function AttendanceMarkerPage() {
       toast.error('Please select a subject');
       return;
     }
-    setQrLoading(true);
-    try {
-      setAuthHeader(accessToken);
-      const res = await attendanceApi.generateQR({
-        courseId: selectedCourseId,
-        subjectId: selectedSubjectId,
-        durationMinutes: qrDuration,
-      });
 
-      setQrToken(res.data.data.qrToken);
-      setQrTimer(qrDuration * 60);
-      toast.success('QR Code generated successfully!');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to generate QR Code');
-    } finally {
-      setQrLoading(false);
+    if (isNative) {
+      // Show rationale dialog before firing the native OS prompt
+      setPendingQrAction(() => _doGenerateQR);
+      setCameraRationaleOpen(true);
+    } else {
+      // On web, generate directly
+      await _doGenerateQR();
     }
+  };
+
+  /**
+   * Called when user confirms the camera rationale dialog.
+   * Requests the native camera permission, then proceeds with QR generation
+   * or shows a guidance toast if the user denies.
+   */
+  const handleCameraRationaleConfirm = async () => {
+    setCameraRationaleOpen(false);
+    setTimeout(async () => {
+      const granted = await requestCameraPermission();
+      if (granted) {
+        if (pendingQrAction) {
+          await pendingQrAction();
+          setPendingQrAction(null);
+        }
+      } else {
+        toast.error(
+          'Camera permission denied. Please enable it in Device Settings → Apps → EduConnect → Permissions.',
+          { duration: 5000 }
+        );
+      }
+    }, 200);
   };
 
   const fetchPastRecords = async () => {
@@ -258,6 +312,17 @@ export default function AttendanceMarkerPage() {
   return (
     <Box>
       <PageHeader title="Attendance Marker" subtitle="Mark class attendance manually or generate dynamic student-scan QR codes" />
+
+      {/* Camera Permission Rationale Dialog — shown before native OS prompt */}
+      <PermissionRationaleDialog
+        open={cameraRationaleOpen}
+        permissionType="camera"
+        onConfirm={handleCameraRationaleConfirm}
+        onDismiss={() => {
+          setCameraRationaleOpen(false);
+          setPendingQrAction(null);
+        }}
+      />
 
       {/* Course & Subject Selector */}
       <Card sx={{ borderRadius: '16px', mb: 4, border: '1px solid', borderColor: 'divider' }}>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 import {
   Box,
   Card,
@@ -25,17 +26,28 @@ import { resultApi, subjectApi } from '../../api';
 import { setAuthHeader } from '../../api/axiosInstance';
 import PageHeader from '../../components/common/PageHeader';
 import StatCard from '../../components/common/StatCard';
+import PermissionRationaleDialog from '../../components/common/PermissionRationaleDialog';
+import { useAppPermissions } from '../../hooks/useAppPermissions';
 import { downloadBlob } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 export default function StudentResultsPage() {
   const { user, accessToken } = useAuth();
   const theme = useTheme();
+  const { requestStoragePermission, isNative } = useAppPermissions();
 
   const [results, setResults] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [downloadLoading, setDownloadLoading] = useState(false);
+  const [chartWidth, setChartWidth] = useState(300);
+
+  // Storage permission rationale state for PDF download
+  const [storageRationaleOpen, setStorageRationaleOpen] = useState(false);
+
+  useEffect(() => {
+    setChartWidth(Math.min(window.innerWidth - 64, 800));
+  }, []);
 
   const fetchData = async () => {
     setLoading(true);
@@ -61,7 +73,12 @@ export default function StudentResultsPage() {
     }
   }, [accessToken, user?.id]);
 
-  const handleDownloadPDF = async () => {
+  /**
+   * Download PDF progress report.
+   * On native: shows storage rationale dialog first, then downloads.
+   * On web: downloads directly.
+   */
+  const _doDownloadPDF = async () => {
     setDownloadLoading(true);
     try {
       setAuthHeader(accessToken);
@@ -74,6 +91,29 @@ export default function StudentResultsPage() {
     } finally {
       setDownloadLoading(false);
     }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (isNative) {
+      setStorageRationaleOpen(true);
+    } else {
+      await _doDownloadPDF();
+    }
+  };
+
+  const handleStorageRationaleConfirm = async () => {
+    setStorageRationaleOpen(false);
+    setTimeout(async () => {
+      const granted = await requestStoragePermission();
+      if (granted) {
+        await _doDownloadPDF();
+      } else {
+        toast.error(
+          'Storage permission denied. Enable it in Device Settings → Apps → EduConnect → Permissions.',
+          { duration: 5000 }
+        );
+      }
+    }, 200);
   };
 
   const getSubjectName = (subjId) => {
@@ -114,6 +154,14 @@ export default function StudentResultsPage() {
 
   return (
     <Box>
+      {/* Storage Rationale Dialog for PDF download — shown before native OS prompt */}
+      <PermissionRationaleDialog
+        open={storageRationaleOpen}
+        permissionType="storage"
+        onConfirm={handleStorageRationaleConfirm}
+        onDismiss={() => setStorageRationaleOpen(false)}
+      />
+
       <PageHeader
         title="My Grades & Performance"
         subtitle="Review your class examination results, GPA indices, and download official report cards"
@@ -163,9 +211,9 @@ export default function StudentResultsPage() {
               <Card sx={{ borderRadius: '16px', border: '1px solid', borderColor: 'divider' }}>
                 <CardContent sx={{ p: 3 }}>
                   <Typography variant="h6" sx={{ fontWeight: 800, mb: 2 }}>Exam-Wise Performance Trend</Typography>
-                  <Box sx={{ width: '100%', height: 250 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                  <Box sx={{ width: '100%', height: 250, overflow: 'hidden' }}>
+                    {Capacitor.isNativePlatform() ? (
+                      <AreaChart width={chartWidth} height={250} data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                         <defs>
                           <linearGradient id="colorPercent" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#6C63FF" stopOpacity={0.4}/>
@@ -178,7 +226,23 @@ export default function StudentResultsPage() {
                         <Tooltip />
                         <Area type="monotone" dataKey="percentage" stroke="#6C63FF" strokeWidth={3} fillOpacity={1} fill="url(#colorPercent)" />
                       </AreaChart>
-                    </ResponsiveContainer>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="colorPercent" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#6C63FF" stopOpacity={0.4}/>
+                              <stop offset="95%" stopColor="#6C63FF" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
+                          <XAxis dataKey="name" stroke={theme.palette.text.secondary} fontSize={11} tickLine={false} />
+                          <YAxis stroke={theme.palette.text.secondary} fontSize={11} tickLine={false} domain={[0, 100]} />
+                          <Tooltip />
+                          <Area type="monotone" dataKey="percentage" stroke="#6C63FF" strokeWidth={3} fillOpacity={1} fill="url(#colorPercent)" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    )}
                   </Box>
                 </CardContent>
               </Card>

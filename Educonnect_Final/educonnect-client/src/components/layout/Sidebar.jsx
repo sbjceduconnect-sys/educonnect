@@ -12,6 +12,7 @@ import {
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
+import { Capacitor } from '@capacitor/core';
 
 const SIDEBAR_WIDTH = 280;
 const SIDEBAR_COLLAPSED = 72;
@@ -92,7 +93,7 @@ export default function Sidebar({ open, onToggle, mobileOpen, onMobileClose }) {
       }}
     >
       {/* Logo */}
-      <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: open ? 'space-between' : 'center', minHeight: 64 }}>
+      <Box sx={{ p: 2, pt: (isMobile && Capacitor.isNativePlatform()) ? 'calc(16px + env(safe-area-inset-top))' : 2, display: 'flex', alignItems: 'center', justifyContent: open ? 'space-between' : 'center', minHeight: 64 }}>
         {open && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -136,8 +137,14 @@ export default function Sidebar({ open, onToggle, mobileOpen, onMobileClose }) {
                 <ListItem disablePadding sx={{ mb: 0.3 }}>
                   <ListItemButton
                     onClick={() => {
-                      navigate(item.path);
-                      if (isMobile) onMobileClose();
+                      if (isMobile) {
+                        onMobileClose();
+                        setTimeout(() => {
+                          navigate(item.path);
+                        }, 150);
+                      } else {
+                        navigate(item.path);
+                      }
                     }}
                     sx={{
                       borderRadius: '10px',
@@ -228,6 +235,7 @@ export default function Sidebar({ open, onToggle, mobileOpen, onMobileClose }) {
         open={mobileOpen}
         onClose={onMobileClose}
         ModalProps={{ keepMounted: true }}
+        transitionDuration={Capacitor.isNativePlatform() ? 0 : undefined}
         sx={{ '& .MuiDrawer-paper': { width: SIDEBAR_WIDTH, boxSizing: 'border-box' } }}
       >
         {drawerContent}
