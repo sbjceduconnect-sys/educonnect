@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { FileOpener } from '@capacitor-community/file-opener';
+import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import toast from 'react-hot-toast';
 
@@ -88,13 +89,13 @@ export async function downloadBlob(blob, filename) {
         header = 'Read failed';
       }
 
-      toast.success(`Saved: ${filename} (${sizeKB} KB) | Header: [${header}] | Opening...`, { duration: 8000 });
+      toast.success(`Saved: ${filename} (${sizeKB} KB) | Sharing...`, { duration: 4000 });
 
-      // 4. Open the file natively using FileOpener
-      await FileOpener.open({
-        filePath: writeResult.uri,
-        contentType: getMimeType(filename, blob.type),
-        openWithDefault: true
+      // 4. Share/Save the file natively using Share plugin
+      await Share.share({
+        title: filename,
+        url: writeResult.uri,
+        dialogTitle: 'Save or Share File'
       });
     } catch (err) {
       console.error('[EduConnect Download Error]', err);
