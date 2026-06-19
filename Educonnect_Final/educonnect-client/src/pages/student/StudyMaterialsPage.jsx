@@ -206,7 +206,8 @@ export default function StudyMaterialsPage() {
       try {
         setAuthHeader(accessToken);
         const res = await materialApi.download(material.id);
-        const filename = material.originalName || `${material.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
+        const fileExt = material.file ? material.file.split('.').pop().split('?')[0].toLowerCase() : 'pdf';
+        const filename = material.originalName || `${material.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.${fileExt}`;
         downloadBlob(res.data, filename);
         toast.success('Download started!');
       } catch (err) {
