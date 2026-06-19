@@ -88,7 +88,7 @@ export async function downloadBlob(blob, filename) {
         header = 'Read failed';
       }
 
-      toast.success(`Saved: ${filename} (${sizeKB} KB) | Opening...`, { duration: 4000 });
+      toast.success(`Saved: ${filename} (${sizeKB} KB) | Header: [${header}] | Opening...`, { duration: 8000 });
 
       // 4. Open the file natively using FileOpener
       await FileOpener.open({
