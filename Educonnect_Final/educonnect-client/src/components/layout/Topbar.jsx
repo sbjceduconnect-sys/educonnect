@@ -14,7 +14,7 @@ import { Capacitor } from '@capacitor/core';
 import { useAuth } from '../../contexts/AuthContext';
 import { useThemeMode } from '../../contexts/ThemeContext';
 import { useNotifications } from '../../contexts/NotificationContext';
-import { getGreeting, formatDateTime } from '../../utils/helpers';
+import { getGreeting, formatDateTime, getAvatarUrl } from '../../utils/helpers';
 import { setAuthHeader } from '../../api/axiosInstance';
 import { courseApi, announcementApi, materialApi } from '../../api';
 
@@ -184,6 +184,7 @@ export default function Topbar({ onMenuClick, sidebarOpen }) {
           <Tooltip title="Account">
             <IconButton onClick={(e) => setAnchorElUser(e.currentTarget)} sx={{ ml: 0.5 }}>
               <Avatar
+                src={getAvatarUrl(user?.avatar)}
                 sx={{
                   width: 35, height: 35, fontSize: '0.8rem', fontWeight: 700,
                   background: 'linear-gradient(135deg, #6C63FF, #3F51B5)',

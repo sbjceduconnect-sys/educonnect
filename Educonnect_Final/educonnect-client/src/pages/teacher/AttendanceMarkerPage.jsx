@@ -38,6 +38,7 @@ import PageHeader from '../../components/common/PageHeader';
 import PermissionRationaleDialog from '../../components/common/PermissionRationaleDialog';
 import { useAppPermissions } from '../../hooks/useAppPermissions';
 import toast from 'react-hot-toast';
+import { getAvatarUrl } from '../../utils/helpers';
 
 export default function AttendanceMarkerPage() {
   const { user, accessToken } = useAuth();
@@ -444,7 +445,7 @@ export default function AttendanceMarkerPage() {
                         <TableCell>{student.profile?.enrollmentNo || 'N/A'}</TableCell>
                         <TableCell>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                            <Avatar sx={{ width: 32, height: 32, fontSize: '0.8rem', background: 'linear-gradient(135deg, #6C63FF, #3F51B5)' }}>
+                            <Avatar src={getAvatarUrl(student.avatar)} sx={{ width: 32, height: 32, fontSize: '0.8rem', background: 'linear-gradient(135deg, #6C63FF, #3F51B5)' }}>
                               {(student.firstName?.[0] || '') + (student.lastName?.[0] || '')}
                             </Avatar>
                             <Typography variant="body2" sx={{ fontWeight: 600 }}>

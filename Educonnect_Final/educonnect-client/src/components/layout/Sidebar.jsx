@@ -13,6 +13,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { Capacitor } from '@capacitor/core';
+import { getAvatarUrl } from '../../utils/helpers';
 
 const SIDEBAR_WIDTH = 280;
 const SIDEBAR_COLLAPSED = 72;
@@ -207,6 +208,7 @@ export default function Sidebar({ open, onToggle, mobileOpen, onMobileClose }) {
             onClick={() => navigate('/profile')}
           >
             <Avatar
+              src={getAvatarUrl(user?.avatar)}
               sx={{
                 width: 36, height: 36, fontSize: '0.85rem',
                 background: 'linear-gradient(135deg, #6C63FF, #3F51B5)',

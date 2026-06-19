@@ -15,6 +15,7 @@ export const userApi = {
   getUser: (id) => api.get(`/users/${id}`),
   listUsers: (params) => api.get('/users', { params }),
   updateUser: (id, data) => api.put(`/users/${id}`, data),
+  uploadAvatar: (id, formData) => api.patch(`/users/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   deleteUser: (id) => api.delete(`/users/${id}`),
   approveUser: (id) => api.patch(`/users/${id}/approve`),
   changeRole: (id, role) => api.patch(`/users/${id}/role`, { role }),

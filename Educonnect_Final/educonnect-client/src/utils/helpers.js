@@ -19,6 +19,17 @@ export function getInitials(firstName, lastName) {
   return `${(firstName || '')[0] || ''}${(lastName || '')[0] || ''}`.toUpperCase();
 }
 
+export function getAvatarUrl(avatar) {
+  if (!avatar) return null;
+  if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+    return avatar;
+  }
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+  const origin = apiUrl.replace(/\/api\/?$/, '');
+  const cleanPath = avatar.startsWith('/') ? avatar : `/${avatar}`;
+  return `${origin}${cleanPath}`;
+}
+
 export function getGreeting() {
   const hour = new Date().getHours();
   if (hour < 12) return 'Good Morning';

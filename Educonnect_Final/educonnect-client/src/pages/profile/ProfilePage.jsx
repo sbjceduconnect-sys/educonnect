@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Box, Card, CardContent, Typography, TextField, Avatar, Grid, Button,
   Chip, Divider, Alert, CircularProgress, Tab, Tabs, IconButton, InputAdornment,
   FormControl, InputLabel, Select, MenuItem
 } from '@mui/material';
-import { Edit, Save, Cancel, Visibility, VisibilityOff, AccountCircle } from '@mui/icons-material';
+import { Edit, Save, Cancel, Visibility, VisibilityOff, AccountCircle, CameraAlt } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { userApi, authApi, departmentApi } from '../../api';
@@ -12,6 +12,7 @@ import { setAuthHeader } from '../../api/axiosInstance';
 import PageHeader from '../../components/common/PageHeader';
 import toast from 'react-hot-toast';
 import { STREAMS } from '../../utils/constants';
+import { getAvatarUrl } from '../../utils/helpers';
 
 export default function ProfilePage() {
   const { user, accessToken, setUser } = useAuth();
@@ -23,6 +24,43 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [departments, setDepartments] = useState([]);
+  const fileInputRef = useRef(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+
+  const handleAvatarClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image file must be under 5MB');
+      return;
+    }
+
+    setAvatarUploading(true);
+    const uploadToastId = toast.loading('Uploading profile picture...');
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      setAuthHeader(accessToken);
+      const res = await userApi.uploadAvatar(user.id, formData);
+      if (res.data.success) {
+        setUser(res.data.data);
+        toast.success('Profile picture updated successfully!', { id: uploadToastId });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to upload profile picture', { id: uploadToastId });
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
 
   const fetchDepts = async () => {
     try {
@@ -95,17 +133,54 @@ export default function ProfilePage() {
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
             <Card sx={{ borderRadius: '16px', textAlign: 'center' }}>
               <Box sx={{ height: 120, background: 'linear-gradient(135deg, #6C63FF, #3F51B5)', borderRadius: '16px 16px 0 0', position: 'relative' }}>
-                <Avatar
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleAvatarChange}
+                />
+                <Box
+                  onClick={handleAvatarClick}
                   sx={{
-                    width: 90, height: 90, fontSize: '2rem', fontWeight: 800,
-                    background: 'linear-gradient(135deg, #42A5F5, #1976D2)',
-                    border: '4px solid white',
-                    position: 'absolute', bottom: -45, left: '50%', transform: 'translateX(-50%)',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                    position: 'absolute',
+                    bottom: -45,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    cursor: 'pointer',
+                    borderRadius: '50%',
+                    '&:hover .avatar-overlay': { opacity: 1 },
                   }}
                 >
-                  {(user?.firstName?.[0] || '') + (user?.lastName?.[0] || '')}
-                </Avatar>
+                  <Avatar
+                    src={getAvatarUrl(user?.avatar)}
+                    sx={{
+                      width: 90, height: 90, fontSize: '2rem', fontWeight: 800,
+                      background: 'linear-gradient(135deg, #42A5F5, #1976D2)',
+                      border: '4px solid white',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                    }}
+                  >
+                    {(user?.firstName?.[0] || '') + (user?.lastName?.[0] || '')}
+                  </Avatar>
+                  <Box
+                    className="avatar-overlay"
+                    sx={{
+                      position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                      bgcolor: 'rgba(0, 0, 0, 0.4)', borderRadius: '50%',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      opacity: 0, transition: 'opacity 0.2s ease',
+                      border: '4px solid white',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    {avatarUploading ? (
+                      <CircularProgress size={24} sx={{ color: 'white' }} />
+                    ) : (
+                      <CameraAlt sx={{ color: 'white', fontSize: '1.8rem' }} />
+                    )}
+                  </Box>
+                </Box>
               </Box>
               <CardContent sx={{ pt: 7 }}>
                 <Typography variant="h6" sx={{ fontWeight: 700 }}>{user?.firstName} {user?.lastName}</Typography>

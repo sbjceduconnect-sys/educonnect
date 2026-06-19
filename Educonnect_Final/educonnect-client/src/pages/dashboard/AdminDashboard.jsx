@@ -10,7 +10,7 @@ import PageHeader from '../../components/common/PageHeader';
 import { dashboardApi } from '../../api';
 import { setAuthHeader } from '../../api/axiosInstance';
 import { useAuth } from '../../contexts/AuthContext';
-import { formatDate, getInitials } from '../../utils/helpers';
+import { formatDate, getInitials, getAvatarUrl } from '../../utils/helpers';
 
 export default function AdminDashboard() {
   const { accessToken } = useAuth();
@@ -114,7 +114,7 @@ export default function AdminDashboard() {
                   {(data?.recentUsers || []).slice(0, 6).map((user, i) => (
                     <ListItem key={user.id || i} sx={{ px: 0, py: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
                       <ListItemIcon>
-                        <Avatar sx={{ width: 36, height: 36, fontSize: '0.8rem', background: 'linear-gradient(135deg, #6C63FF, #3F51B5)' }}>
+                        <Avatar src={getAvatarUrl(user.avatar)} sx={{ width: 36, height: 36, fontSize: '0.8rem', background: 'linear-gradient(135deg, #6C63FF, #3F51B5)' }}>
                           {getInitials(user.firstName, user.lastName)}
                         </Avatar>
                       </ListItemIcon>
