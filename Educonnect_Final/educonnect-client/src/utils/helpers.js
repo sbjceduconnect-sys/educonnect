@@ -46,11 +46,11 @@ export async function downloadBlob(blob, filename) {
         reader.readAsDataURL(blob);
       });
 
-      // 2. Write file natively to public Documents folder
+      // 2. Write file natively to app Cache folder
       const writeResult = await Filesystem.writeFile({
         path: filename,
         data: base64Data,
-        directory: Directory.Documents,
+        directory: Directory.Cache,
         recursive: true
       });
 
@@ -59,7 +59,7 @@ export async function downloadBlob(blob, filename) {
       try {
         const check = await Filesystem.readFile({
           path: filename,
-          directory: Directory.Documents,
+          directory: Directory.Cache,
           encoding: 'utf8'
         });
         header = check.data.substring(0, 15);
