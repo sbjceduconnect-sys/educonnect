@@ -29,7 +29,7 @@ import {
   Chip,
   IconButton,
 } from '@mui/material';
-import { CheckCircle, QrCode, People, Timer, Refresh, History, Delete } from '@mui/icons-material';
+import { CheckCircle, QrCode, People, Timer, Refresh, History, Delete, Lock, Visibility } from '@mui/icons-material';
 import { QRCode } from 'react-qr-code';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { useAuth } from '../../contexts/AuthContext';
@@ -58,6 +58,23 @@ export default function AttendanceMarkerPage() {
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
   const [attendanceRecords, setRecords] = useState({}); // studentId: status
+  const [dbRecords, setDbRecords] = useState({}); // studentId: dbRecordObject
+  const [pendingRequests, setPendingRequests] = useState({}); // studentId: requestObject
+  
+  // Edit request dialog states
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedStudentForEdit, setSelectedStudentForEdit] = useState(null);
+  const [requestedNewStatus, setRequestedNewStatus] = useState('present');
+  const [editReason, setEditReason] = useState('');
+  const [submittingEdit, setSubmittingEdit] = useState(false);
+
+  // Daily roster reporting dialog states
+  const [rosterDialogOpen, setRosterDialogOpen] = useState(false);
+  const [rosterDate, setRosterDate] = useState('');
+  const [rosterMethod, setRosterMethod] = useState('manual');
+  const [rosterClassStudents, setRosterClassStudents] = useState([]);
+  const [rosterClassRecords, setRosterClassRecords] = useState([]);
+  const [rosterLoading, setRosterLoading] = useState(false);
 
   // QR code states
   const [qrDuration, setQrDuration] = useState(10); // in minutes
@@ -101,9 +118,10 @@ export default function AttendanceMarkerPage() {
     setStudentsLoading(true);
     try {
       setAuthHeader(accessToken);
-      const [studentsRes, recordsRes] = await Promise.all([
+      const [studentsRes, recordsRes, reqsRes] = await Promise.all([
         courseApi.getStudents(selectedCourseId),
-        attendanceApi.list({ courseId: selectedCourseId, subjectId: selectedSubjectId, date: attendanceDate })
+        attendanceApi.list({ courseId: selectedCourseId, subjectId: selectedSubjectId, date: attendanceDate }),
+        attendanceApi.listEditRequests({ courseId: selectedCourseId, subjectId: selectedSubjectId, date: attendanceDate, status: 'Pending' })
       ]);
       
       const studentList = studentsRes.data.data || [];
@@ -111,11 +129,24 @@ export default function AttendanceMarkerPage() {
       
       const existing = recordsRes.data.data || [];
       const initial = {};
+      const dbRecsMap = {};
       studentList.forEach((s) => {
         const dbRec = existing.find(r => String(r.student) === String(s.id) || String(r.studentId) === String(s.id));
         initial[s.id] = dbRec ? dbRec.status.toLowerCase() : '';
+        if (dbRec) {
+          dbRecsMap[s.id] = dbRec;
+        }
       });
       setRecords(initial);
+      setDbRecords(dbRecsMap);
+
+      const pendingMap = {};
+      (reqsRes.data.data || []).forEach((req) => {
+        if (req.studentId) {
+          pendingMap[req.studentId] = req;
+        }
+      });
+      setPendingRequests(pendingMap);
     } catch (err) {
       console.error(err);
       toast.error('Failed to load attendance directory');
@@ -306,6 +337,71 @@ export default function AttendanceMarkerPage() {
     }
   };
 
+  const handleOpenEditDialog = (student) => {
+    setSelectedStudentForEdit(student);
+    const dbRec = dbRecords[student.id];
+    setRequestedNewStatus(dbRec ? dbRec.status.toLowerCase() : 'present');
+    setEditReason('');
+    setEditDialogOpen(true);
+  };
+
+  const handleCloseEditDialog = () => {
+    setEditDialogOpen(false);
+    setSelectedStudentForEdit(null);
+    setEditReason('');
+  };
+
+  const handleSubmitEditRequest = async () => {
+    if (!selectedStudentForEdit) return;
+    const dbRec = dbRecords[selectedStudentForEdit.id];
+    if (!dbRec) {
+      toast.error("No locked record found to request edit.");
+      return;
+    }
+    if (!editReason.trim()) {
+      toast.error("Please provide a reason for the edit request.");
+      return;
+    }
+    setSubmittingEdit(true);
+    try {
+      setAuthHeader(accessToken);
+      await attendanceApi.createEditRequest({
+        attendanceRecordId: dbRec.id,
+        newStatus: requestedNewStatus.charAt(0).toUpperCase() + requestedNewStatus.slice(1),
+        reason: editReason.trim(),
+      });
+      toast.success("Edit request submitted successfully!");
+      handleCloseEditDialog();
+      loadAttendanceStates();
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || "Failed to submit edit request.");
+    } finally {
+      setSubmittingEdit(false);
+    }
+  };
+
+  const handleOpenRosterDetail = async (logRecord) => {
+    setRosterDate(logRecord.date);
+    setRosterMethod(logRecord.method);
+    setRosterLoading(true);
+    setRosterDialogOpen(true);
+    try {
+      setAuthHeader(accessToken);
+      const [studentsRes, recordsRes] = await Promise.all([
+        courseApi.getStudents(selectedCourseId),
+        attendanceApi.list({ courseId: selectedCourseId, subjectId: selectedSubjectId, date: logRecord.date })
+      ]);
+      setRosterClassStudents(studentsRes.data.data || []);
+      setRosterClassRecords(recordsRes.data.data || []);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load daily roster details.");
+    } finally {
+      setRosterLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 2 && selectedSubjectId) {
       fetchPastRecords();
@@ -456,37 +552,62 @@ export default function AttendanceMarkerPage() {
                       <TableCell sx={{ fontWeight: 700 }}>Roll / Reg No</TableCell>
                       <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
                       <TableCell align="center" sx={{ fontWeight: 700 }}>Status Selection</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 700 }}>Lock State & Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {students.map((student) => (
-                      <TableRow key={student.id} hover>
-                        <TableCell>{student.profile?.enrollmentNo || 'N/A'}</TableCell>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                            <Avatar src={getAvatarUrl(student.avatar)} sx={{ width: 32, height: 32, fontSize: '0.8rem', background: 'linear-gradient(135deg, #6C63FF, #3F51B5)' }}>
-                              {(student.firstName?.[0] || '') + (student.lastName?.[0] || '')}
-                            </Avatar>
-                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                              {student.firstName} {student.lastName}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell align="center">
-                          <RadioGroup
-                            row
-                            value={attendanceRecords[student.id] || ''}
-                            onChange={(e) => handleStatusChange(student.id, e.target.value)}
-                            sx={{ justifyContent: 'center', gap: 1 }}
-                          >
-                            <FormControlLabel value="present" control={<Radio color="success" />} label="Present" />
-                            <FormControlLabel value="absent" control={<Radio color="error" />} label="Absent" />
-                            <FormControlLabel value="late" control={<Radio color="warning" />} label="Late" />
-                            <FormControlLabel value="excused" control={<Radio color="info" />} label="Excused" />
-                          </RadioGroup>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {students.map((student) => {
+                      const dbRec = dbRecords[student.id];
+                      const pendingReq = pendingRequests[student.id];
+                      const isLocked = !!dbRec && user?.role !== 'admin';
+
+                      return (
+                        <TableRow key={student.id} hover>
+                          <TableCell>{student.profile?.enrollmentNo || 'N/A'}</TableCell>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                              <Avatar src={getAvatarUrl(student.avatar)} sx={{ width: 32, height: 32, fontSize: '0.8rem', background: 'linear-gradient(135deg, #6C63FF, #3F51B5)' }}>
+                                {(student.firstName?.[0] || '') + (student.lastName?.[0] || '')}
+                              </Avatar>
+                              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                {student.firstName} {student.lastName}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell align="center">
+                            <RadioGroup
+                              row
+                              value={attendanceRecords[student.id] || ''}
+                              onChange={(e) => handleStatusChange(student.id, e.target.value)}
+                              sx={{ justifyContent: 'center', gap: 1 }}
+                            >
+                              <FormControlLabel value="present" disabled={isLocked} control={<Radio color="success" />} label="Present" />
+                              <FormControlLabel value="absent" disabled={isLocked} control={<Radio color="error" />} label="Absent" />
+                              <FormControlLabel value="late" disabled={isLocked} control={<Radio color="warning" />} label="Late" />
+                              <FormControlLabel value="excused" disabled={isLocked} control={<Radio color="info" />} label="Excused" />
+                            </RadioGroup>
+                          </TableCell>
+                          <TableCell align="center">
+                            {isLocked ? (
+                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                                {pendingReq ? (
+                                  <Chip label="Pending Approval" color="warning" size="small" variant="outlined" sx={{ fontWeight: 600 }} />
+                                ) : (
+                                  <>
+                                    <Chip label="Locked" icon={<Lock sx={{ fontSize: '0.9rem' }} />} size="small" variant="outlined" sx={{ fontWeight: 600 }} />
+                                    <Button variant="contained" size="small" color="primary" onClick={() => handleOpenEditDialog(student)} sx={{ textTransform: 'none', borderRadius: '6px', fontSize: '0.75rem', py: 0.2 }}>
+                                      Request Edit
+                                    </Button>
+                                  </>
+                                )}
+                              </Box>
+                            ) : (
+                              <Typography variant="caption" color="text.secondary">Draft</Typography>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -666,14 +787,24 @@ export default function AttendanceMarkerPage() {
                             </Typography>
                           </TableCell>
                           <TableCell align="center">
-                            <IconButton 
-                              color="error" 
-                              onClick={() => handleDeleteAttendance(record.id)} 
-                              size="small"
-                              title="Delete Session"
-                            >
-                              <Delete />
-                            </IconButton>
+                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                              <IconButton 
+                                color="primary" 
+                                onClick={() => handleOpenRosterDetail(record)} 
+                                size="small"
+                                title="View Daily Roster"
+                              >
+                                <Visibility />
+                              </IconButton>
+                              <IconButton 
+                                color="error" 
+                                onClick={() => handleDeleteAttendance(record.id)} 
+                                size="small"
+                                title="Delete Session"
+                              >
+                                <Delete />
+                              </IconButton>
+                            </Box>
                           </TableCell>
                         </TableRow>
                       );
@@ -685,6 +816,116 @@ export default function AttendanceMarkerPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Request Edit Dialog */}
+      <Dialog open={editDialogOpen} onClose={handleCloseEditDialog} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ fontWeight: 800 }}>Request Attendance Edit</DialogTitle>
+        <DialogContent>
+          {selectedStudentForEdit && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, mt: 1 }}>
+              <Typography variant="body2">
+                Request modification of attendance for <strong>{selectedStudentForEdit.firstName} {selectedStudentForEdit.lastName}</strong> on {new Date(attendanceDate).toLocaleDateString()}.
+              </Typography>
+              <FormControl fullWidth>
+                <InputLabel id="new-status-label">Proposed Status</InputLabel>
+                <Select
+                  labelId="new-status-label"
+                  value={requestedNewStatus}
+                  label="Proposed Status"
+                  onChange={(e) => setRequestedNewStatus(e.target.value)}
+                >
+                  <MenuItem value="present">Present</MenuItem>
+                  <MenuItem value="absent">Absent</MenuItem>
+                  <MenuItem value="late">Late</MenuItem>
+                  <MenuItem value="excused">Excused</MenuItem>
+                </Select>
+              </FormControl>
+              <TextField
+                label="Reason for Modification"
+                multiline
+                rows={3}
+                value={editReason}
+                onChange={(e) => setEditReason(e.target.value)}
+                placeholder="Explain why this change is required (e.g. Student scanned late, medical certificate)..."
+                fullWidth
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5 }}>
+          <Button onClick={handleCloseEditDialog} variant="outlined" sx={{ borderRadius: '8px' }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmitEditRequest}
+            variant="contained"
+            disabled={submittingEdit || !editReason.trim()}
+            sx={{ borderRadius: '8px', background: 'linear-gradient(135deg, #6C63FF, #3F51B5)' }}
+          >
+            Submit Request
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Daily Roster Detail Dialog */}
+      <Dialog open={rosterDialogOpen} onClose={() => setRosterDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 800 }}>
+          Daily Attendance Roster
+          <Typography variant="caption" display="block" color="text.secondary">
+            Date: {new Date(rosterDate).toLocaleDateString()} | Method: {rosterMethod?.toUpperCase()}
+          </Typography>
+        </DialogTitle>
+        <Divider />
+        <DialogContent sx={{ p: 0 }}>
+          {rosterLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
+              <CircularProgress />
+            </Box>
+          ) : rosterClassStudents.length === 0 ? (
+            <Box sx={{ p: 4, textAlign: 'center' }}>
+              <Typography color="text.secondary">No roster records found.</Typography>
+            </Box>
+          ) : (
+            <TableContainer>
+              <Table size="small">
+                <TableHead sx={{ bgcolor: 'action.hover' }}>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 700 }}>Roll / Reg No</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 700 }}>Status</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {rosterClassStudents.map((student) => {
+                    const dbRec = rosterClassRecords.find(r => String(r.student) === String(student.id) || String(r.studentId) === String(student.id));
+                    const status = dbRec ? dbRec.status.toLowerCase() : 'absent';
+                    let chipColor = 'error';
+                    if (status === 'present') chipColor = 'success';
+                    else if (status === 'late') chipColor = 'warning';
+                    else if (status === 'excused') chipColor = 'info';
+
+                    return (
+                      <TableRow key={student.id} hover>
+                        <TableCell>{student.profile?.enrollmentNo || 'N/A'}</TableCell>
+                        <TableCell>{student.firstName} {student.lastName}</TableCell>
+                        <TableCell align="center">
+                          <Chip label={status} color={chipColor} size="small" sx={{ fontWeight: 700, textTransform: 'capitalize' }} />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </DialogContent>
+        <Divider />
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setRosterDialogOpen(false)} variant="contained" sx={{ borderRadius: '8px' }}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

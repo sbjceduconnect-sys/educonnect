@@ -43,3 +43,26 @@ class ActiveQRCode(models.Model):
 
     def __str__(self):
         return f"QR Token {self.token} for {self.subject}"
+
+
+class AttendanceEditRequest(models.Model):
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Approved', 'Approved'),
+        ('Rejected', 'Rejected'),
+    ]
+    attendance_record = models.ForeignKey(AttendanceRecord, on_delete=models.CASCADE, related_name='edit_requests')
+    requested_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='requested_attendance_edits')
+    new_status = models.CharField(max_length=10, choices=AttendanceRecord.STATUS_CHOICES)
+    reason = models.TextField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'attendance_edit_requests'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Edit Request by {self.requested_by} for {self.attendance_record.student} - Status {self.status}"
+

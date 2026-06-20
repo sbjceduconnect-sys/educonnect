@@ -5,8 +5,8 @@ from datetime import timedelta
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from core.response import api_success, api_error
-from .models import AttendanceRecord, ActiveQRCode
-from .serializers import AttendanceSerializer
+from .models import AttendanceRecord, ActiveQRCode, AttendanceEditRequest
+from .serializers import AttendanceSerializer, AttendanceEditRequestSerializer
 
 class AttendanceView(APIView):
     permission_classes = [IsAuthenticated]
@@ -33,21 +33,53 @@ class AttendanceView(APIView):
             return api_error("course_id, subject_id, and date are required.", status=400)
             
         created = []
+        is_admin = request.user.role == 'admin'
+
         for rec in records:
+            student_id = rec.get('student_id') or rec.get('studentId')
+            if not student_id:
+                continue
+                
             raw_status = rec.get('status', 'Absent').capitalize()
             if raw_status in ['Present', 'Absent', 'Late', 'Excused']:
                 db_status = raw_status
             else:
                 db_status = 'Absent'
                 
-            obj, _ = AttendanceRecord.objects.update_or_create(
-                student_id=rec['student_id'] if 'student_id' in rec else rec['studentId'],
+            # Check lock state
+            existing = AttendanceRecord.objects.filter(
+                student_id=student_id,
                 course_id=course_id,
                 subject_id=subject_id,
-                date=date,
-                defaults={'status': db_status, 'marked_by': request.user, 'method': 'manual'},
-            )
-            created.append(obj)
+                date=date
+            ).first()
+
+            if existing:
+                if not is_admin:
+                    # If status is modified, standard users (teachers) cannot update locked record!
+                    if existing.status.capitalize() != db_status:
+                        return api_error(
+                            f"Attendance record is locked. Standard users cannot modify submitted attendance.",
+                            status=403
+                        )
+                    continue
+                else:
+                    existing.status = db_status
+                    existing.marked_by = request.user
+                    existing.save()
+                    created.append(existing)
+            else:
+                obj = AttendanceRecord.objects.create(
+                    student_id=student_id,
+                    course_id=course_id,
+                    subject_id=subject_id,
+                    date=date,
+                    status=db_status,
+                    marked_by=request.user,
+                    method='manual'
+                )
+                created.append(obj)
+                
         return api_success(
             data={"submitted": len(created)},
             message=f"Attendance saved for {len(created)} students.",
@@ -114,12 +146,28 @@ class ScanQRView(APIView):
         except ActiveQRCode.DoesNotExist:
             return api_error("Invalid or expired QR token.", status=400)
             
-        obj, created = AttendanceRecord.objects.update_or_create(
+        # Check if record already exists
+        existing_record = AttendanceRecord.objects.filter(
+            student=request.user,
+            course=active_qr.course,
+            subject=active_qr.subject,
+            date=timezone.localdate()
+        ).first()
+
+        if existing_record:
+            if existing_record.status.capitalize() == 'Present':
+                return api_success(message="Attendance marked successfully via QR Code!")
+            else:
+                return api_error("Attendance record is locked. Cannot overwrite submitted attendance.", status=400)
+
+        obj = AttendanceRecord.objects.create(
             student=request.user,
             course=active_qr.course,
             subject=active_qr.subject,
             date=timezone.localdate(),
-            defaults={'status': 'Present', 'method': 'qr', 'marked_by': request.user}
+            status='Present',
+            method='qr',
+            marked_by=request.user
         )
         return api_success(message="Attendance marked successfully via QR Code!")
 
@@ -240,3 +288,78 @@ class AttendanceDetailView(APIView):
             return api_success(message="Attendance record deleted.")
         except AttendanceRecord.DoesNotExist:
             return api_error("Not found.", status=404)
+
+
+class AttendanceEditRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role == 'admin':
+            qs = AttendanceEditRequest.objects.all()
+        elif request.user.role == 'teacher':
+            qs = AttendanceEditRequest.objects.filter(requested_by=request.user)
+        else:
+            return api_error("Only admins and teachers can view edit requests.", status=403)
+            
+        course_id = request.query_params.get('courseId') or request.query_params.get('course_id')
+        subject_id = request.query_params.get('subjectId') or request.query_params.get('subject_id')
+        date = request.query_params.get('date')
+        status = request.query_params.get('status')
+        
+        if course_id:
+            qs = qs.filter(attendance_record__course_id=course_id)
+        if subject_id:
+            qs = qs.filter(attendance_record__subject_id=subject_id)
+        if date:
+            qs = qs.filter(attendance_record__date=date)
+        if status:
+            qs = qs.filter(status=status)
+            
+        serializer = AttendanceEditRequestSerializer(qs, many=True)
+        return api_success(data=serializer.data)
+
+    def post(self, request):
+        if request.user.role not in ['teacher', 'admin']:
+            return api_error("Only teachers and admins can create edit requests.", status=403)
+            
+        serializer = AttendanceEditRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            attendance_record = serializer.validated_data['attendance_record']
+            if AttendanceEditRequest.objects.filter(attendance_record=attendance_record, status='Pending').exists():
+                return api_error("A pending edit request already exists for this attendance record.", status=400)
+                
+            serializer.save(requested_by=request.user)
+            return api_success(data=serializer.data, message="Edit request submitted successfully.", status=201)
+        return api_error(serializer.errors, status=400)
+
+
+class AttendanceEditRequestActionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        if request.user.role != 'admin':
+            return api_error("Only administrators can approve or reject edit requests.", status=403)
+            
+        try:
+            edit_req = AttendanceEditRequest.objects.get(pk=pk)
+        except AttendanceEditRequest.DoesNotExist:
+            return api_error("Edit request not found.", status=404)
+            
+        if edit_req.status != 'Pending':
+            return api_error(f"This request has already been {edit_req.status.lower()}.", status=400)
+            
+        action = request.data.get('action')
+        if action == 'approve':
+            edit_req.status = 'Approved'
+            record = edit_req.attendance_record
+            record.status = edit_req.new_status
+            record.marked_by = edit_req.requested_by
+            record.save()
+            edit_req.save()
+            return api_success(message="Edit request approved. Attendance record updated.")
+        elif action == 'reject':
+            edit_req.status = 'Rejected'
+            edit_req.save()
+            return api_success(message="Edit request rejected.")
+        else:
+            return api_error("Invalid action. Must be 'approve' or 'reject'.", status=400)
