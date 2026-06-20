@@ -28,6 +28,10 @@ import {
   CircularProgress,
   Chip,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import { CheckCircle, QrCode, People, Timer, Refresh, History, Delete, Lock, Visibility } from '@mui/icons-material';
 import { QRCode } from 'react-qr-code';
