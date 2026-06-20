@@ -12,7 +12,7 @@ class ExamSerializer(CamelCaseSerializer):
 
     class Meta:
         model = Exam
-        fields = '__all__'
+        fields = ['id', 'title', 'course_id', 'subject_id', 'exam_date', 'exam_type', 'duration', 'max_marks', 'academic_year']
         read_only_fields = ['created_at']
 
 

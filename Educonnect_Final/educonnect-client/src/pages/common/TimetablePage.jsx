@@ -43,6 +43,7 @@ import PageHeader from '../../components/common/PageHeader';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import toast from 'react-hot-toast';
 import { STREAMS } from '../../utils/constants';
+import { formatTime12Hour } from '../../utils/helpers';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -108,21 +109,19 @@ export default function TimetablePage() {
     try {
       setAuthHeader(accessToken);
       
-      const [deptRes, subRes] = await Promise.all([
+      const [deptRes, subRes, userRes] = await Promise.all([
         departmentApi.list(),
         subjectApi.list(),
+        userApi.listUsers({ role: 'teacher' }),
       ]);
       const depts = deptRes.data.data || [];
       setDepartments(depts);
       setSubjects(subRes.data.data || []);
+      setTeachers(userRes.data.data || []);
 
       if (isAdmin) {
-        const [ttRes, userRes] = await Promise.all([
-          timetableApi.list(),
-          userApi.listUsers({ role: 'teacher' }),
-        ]);
+        const ttRes = await timetableApi.list();
         setTimetables(ttRes.data.data || []);
-        setTeachers(userRes.data.data || []);
       } else if (isTeacher) {
         const ttRes = await timetableApi.getTeacherSchedule(user.id);
         const compiled = compileTeacherSchedule(ttRes.data.data || []);
@@ -469,7 +468,7 @@ export default function TimetablePage() {
                     <Stack direction="row" alignItems="center" spacing={1} sx={{ color: 'text.secondary' }}>
                       <AccessTime fontSize="small" color="primary" />
                       <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                        {slot.startTime} - {slot.endTime}
+                        {formatTime12Hour(slot.startTime)} - {formatTime12Hour(slot.endTime)}
                       </Typography>
                     </Stack>
 

@@ -268,6 +268,15 @@ export default function CalendarPage() {
                     padding: '2px 4px',
                     fontSize: '0.8rem',
                     fontWeight: 600,
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap',
+                    textOverflow: 'ellipsis',
+                    display: 'block',
+                  },
+                  '& .fc-event-title': {
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap',
+                    textOverflow: 'ellipsis',
                   },
                   '& .fc-col-header-cell': {
                     bgcolor: (theme) => theme.palette.mode === 'dark' ? '#1E1E38' : '#F1F3F9',
@@ -293,6 +302,7 @@ export default function CalendarPage() {
                   dateClick={handleDateClick}
                   eventClick={handleEventClick}
                   height="auto"
+                  dayMaxEvents={true}
                 />
               </Box>
             )}

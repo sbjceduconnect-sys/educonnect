@@ -141,3 +141,19 @@ export function truncateText(text, maxLength = 100) {
   if (!text || text.length <= maxLength) return text;
   return text.substring(0, maxLength) + '...';
 }
+
+export function formatTime12Hour(timeStr) {
+  if (!timeStr) return 'N/A';
+  if (timeStr.includes('AM') || timeStr.includes('PM') || timeStr.includes('am') || timeStr.includes('pm')) {
+    return timeStr;
+  }
+  const parts = timeStr.split(':');
+  if (parts.length < 2) return timeStr;
+  let hours = parseInt(parts[0], 10);
+  const minutes = parts[1];
+  if (isNaN(hours)) return timeStr;
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  return `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+}

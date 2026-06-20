@@ -34,6 +34,7 @@ import { setAuthHeader } from '../../api/axiosInstance';
 import PageHeader from '../../components/common/PageHeader';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import toast from 'react-hot-toast';
+import { formatTime12Hour } from '../../utils/helpers';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -310,7 +311,7 @@ export default function OfficeHoursPage() {
                             <Stack direction="row" alignItems="center" spacing={1} color="text.secondary">
                               <Schedule fontSize="small" />
                               <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                {slot.startTime} - {slot.endTime}
+                                {formatTime12Hour(slot.startTime)} - {formatTime12Hour(slot.endTime)}
                               </Typography>
                             </Stack>
                           </Grid>

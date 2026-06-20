@@ -175,13 +175,14 @@ class UserListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from core.permissions import IsAdmin
-        if not IsAdmin().has_permission(request, self):
-            return api_success(data=UserSerializer(request.user).data)
-
         role = request.query_params.get('role')
         is_approved = request.query_params.get('is_approved') or request.query_params.get('isApproved')
-        
+
+        from core.permissions import IsAdmin
+        if not IsAdmin().has_permission(request, self):
+            if role != 'teacher':
+                return api_success(data=UserSerializer(request.user).data)
+
         qs = User.objects.all()
         if role:
             qs = qs.filter(role=role)

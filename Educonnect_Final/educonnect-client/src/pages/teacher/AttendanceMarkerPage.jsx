@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Card,
@@ -31,6 +31,7 @@ import {
 } from '@mui/material';
 import { CheckCircle, QrCode, People, Timer, Refresh, History, Delete } from '@mui/icons-material';
 import { QRCode } from 'react-qr-code';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import { useAuth } from '../../contexts/AuthContext';
 import { courseApi, attendanceApi, subjectApi } from '../../api';
 import { setAuthHeader } from '../../api/axiosInstance';
@@ -74,6 +75,54 @@ export default function AttendanceMarkerPage() {
   // Pending action to run after permission is confirmed
   const [pendingQrAction, setPendingQrAction] = useState(null);
 
+  // Manual QR scanner states
+  const [manualScannerActive, setManualScannerActive] = useState(false);
+  const manualScannerRef = useRef(null);
+
+  // Hook for scanning student QR codes in manual mode
+  useEffect(() => {
+    let html5QrcodeScanner = null;
+    if (manualScannerActive) {
+      html5QrcodeScanner = new Html5QrcodeScanner(
+        "manual-reader-container",
+        { fps: 10, qrbox: { width: 200, height: 200 } },
+        false
+      );
+
+      const onScanSuccess = (decodedText) => {
+        html5QrcodeScanner.clear();
+        setManualScannerActive(false);
+        
+        // Find student in class list by id, enrollmentNo, or username
+        const matchedStudent = students.find(
+          (s) => String(s.id) === decodedText || String(s.profile?.enrollmentNo) === decodedText || s.username === decodedText
+        );
+        if (matchedStudent) {
+          handleStatusChange(matchedStudent.id, 'present');
+          toast.success(`Marked ${matchedStudent.firstName} ${matchedStudent.lastName} as Present!`);
+        } else {
+          toast.error('Student not found in this class list');
+        }
+      };
+
+      const onScanFailure = (error) => {
+        // quiet fail
+      };
+
+      html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    }
+
+    return () => {
+      if (html5QrcodeScanner) {
+        try {
+          html5QrcodeScanner.clear();
+        } catch (e) {
+          // ignore
+        }
+      }
+    };
+  }, [manualScannerActive, students]);
+
   // Fetch teacher's courses and subjects
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -109,10 +158,10 @@ export default function AttendanceMarkerPage() {
         const studentList = res.data.data || [];
         setStudents(studentList);
         
-        // Initialize records to 'present'
+        // Initialize records to empty
         const initial = {};
         studentList.forEach((s) => {
-          initial[s.id] = 'present';
+          initial[s.id] = '';
         });
         setRecords(initial);
       } catch (err) {
@@ -410,6 +459,17 @@ export default function AttendanceMarkerPage() {
             <Box sx={{ p: 2.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
               <Typography variant="h6" sx={{ fontWeight: 800 }}>Enrolled Student List</Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={() => setManualScannerActive(!manualScannerActive)}
+                  color={manualScannerActive ? "error" : "primary"}
+                  startIcon={<QrCode />}
+                  disabled={students.length === 0}
+                  sx={{ borderRadius: '8px', textTransform: 'none', background: manualScannerActive ? undefined : 'linear-gradient(135deg, #6C63FF, #3F51B5)' }}
+                >
+                  {manualScannerActive ? 'Cancel Scanner' : 'Scan Student QR'}
+                </Button>
                 <Button size="small" variant="outlined" onClick={() => handleMarkAll('present')} color="success" sx={{ borderRadius: '8px', textTransform: 'none' }}>
                   Mark All Present
                 </Button>
@@ -419,6 +479,13 @@ export default function AttendanceMarkerPage() {
               </Box>
             </Box>
             
+            {manualScannerActive && (
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
+                <Box id="manual-reader-container" sx={{ width: '100%', maxWidth: 300, border: '1px solid', borderColor: 'divider', borderRadius: '12px', overflow: 'hidden', mb: 1 }}></Box>
+                <Typography variant="caption" color="text.secondary">Scan student's ID QR code to mark them as Present.</Typography>
+              </Box>
+            )}
+
             <Divider />
 
             {studentsLoading ? (
@@ -456,7 +523,7 @@ export default function AttendanceMarkerPage() {
                         <TableCell align="center">
                           <RadioGroup
                             row
-                            value={attendanceRecords[student.id] || 'present'}
+                            value={attendanceRecords[student.id] || ''}
                             onChange={(e) => handleStatusChange(student.id, e.target.value)}
                             sx={{ justifyContent: 'center', gap: 1 }}
                           >

@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { Edit, Save, Cancel, Visibility, VisibilityOff, AccountCircle, CameraAlt } from '@mui/icons-material';
 import { motion } from 'framer-motion';
+import { QRCode } from 'react-qr-code';
 import { useAuth } from '../../contexts/AuthContext';
 import { userApi, authApi, departmentApi } from '../../api';
 import { setAuthHeader } from '../../api/axiosInstance';
@@ -202,6 +203,15 @@ export default function ProfilePage() {
                   {user?.profile?.specialization && <Typography variant="body2" sx={{ mb: 0.8 }}><strong>Specialization:</strong> {user.profile.specialization}</Typography>}
                   {user?.profile?.address && <Typography variant="body2" sx={{ mb: 0.8 }}><strong>Address:</strong> {user.profile.address}</Typography>}
                 </Box>
+                {user?.role === 'student' && (
+                  <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Student ID QR Code</Typography>
+                    <Box sx={{ p: 1.5, bgcolor: '#fff', borderRadius: '12px', border: '1px solid', borderColor: 'divider', display: 'inline-block' }}>
+                      <QRCode value={String(user.id)} size={120} />
+                    </Box>
+                    <Typography variant="caption" color="text.secondary">Present this QR code to the instructor to mark attendance.</Typography>
+                  </Box>
+                )}
               </CardContent>
             </Card>
           </motion.div>
