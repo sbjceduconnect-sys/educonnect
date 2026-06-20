@@ -53,15 +53,15 @@ export default function LoginPage() {
         justifyContent: 'center',
         p: 2,
         background: theme.palette.mode === 'dark'
-          ? 'linear-gradient(135deg, #0F0F23 0%, #1A1A2E 30%, #16213E 60%, #0F0F23 100%)'
-          : 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #6C63FF 100%)',
+          ? '#0F1E33'
+          : '#1B3F6B',
         position: 'relative',
         overflow: 'hidden',
       }}
     >
       {/* Background decoration */}
-      <Box sx={{ position: 'absolute', top: -100, right: -100, width: 400, height: 400, borderRadius: '50%', background: 'rgba(108, 99, 255, 0.1)', filter: 'blur(60px)' }} />
-      <Box sx={{ position: 'absolute', bottom: -120, left: -80, width: 500, height: 500, borderRadius: '50%', background: 'rgba(63, 81, 181, 0.1)', filter: 'blur(80px)' }} />
+      <Box sx={{ position: 'absolute', top: -150, left: -150, width: 450, height: 450, borderRadius: '50%', background: 'rgba(240, 120, 48, 0.45)', filter: 'blur(100px)' }} />
+      <Box sx={{ position: 'absolute', bottom: -180, right: -150, width: 550, height: 550, borderRadius: '50%', background: 'rgba(240, 120, 48, 0.35)', filter: 'blur(120px)' }} />
 
       <motion.div
         initial={{ opacity: 0, y: 30 }}
@@ -79,9 +79,9 @@ export default function LoginPage() {
             <Box
               sx={{
                 width: 64, height: 64, borderRadius: '20px', mx: 'auto', mb: 2,
-                background: 'linear-gradient(135deg, #6C63FF, #3F51B5)',
+                background: 'linear-gradient(135deg, #1B3F6B, #F07830)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 8px 32px rgba(108, 99, 255, 0.4)',
+                boxShadow: '0 8px 32px rgba(27, 63, 107, 0.4)',
               }}
             >
               <Typography sx={{ fontSize: '2rem' }}>🎓</Typography>
@@ -94,14 +94,14 @@ export default function LoginPage() {
             SaiBalaji Junior College
           </Typography>
         </Box>
-
+ 
         <Card
           sx={{
             borderRadius: '20px',
             boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
             backdropFilter: 'blur(20px)',
             background: theme.palette.mode === 'dark'
-              ? 'rgba(26, 26, 46, 0.95)'
+              ? 'rgba(20, 37, 61, 0.95)'
               : 'rgba(255, 255, 255, 0.95)',
           }}
         >
@@ -112,13 +112,13 @@ export default function LoginPage() {
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3, textAlign: 'center' }}>
               Sign in to continue learning
             </Typography>
-
+ 
             {error && (
               <Alert severity="error" sx={{ mb: 2, borderRadius: '10px' }} onClose={() => setError('')}>
                 {error}
               </Alert>
             )}
-
+ 
             <form onSubmit={handleSubmit}>
               <TextField
                 fullWidth
@@ -150,7 +150,7 @@ export default function LoginPage() {
                   ),
                 }}
               />
-
+ 
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2.5 }}>
                 <Typography
                   component={RouterLink}
@@ -166,7 +166,7 @@ export default function LoginPage() {
                   Forgot Password?
                 </Typography>
               </Box>
-
+ 
               <Button
                 type="submit"
                 fullWidth
@@ -176,21 +176,21 @@ export default function LoginPage() {
                 startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <LoginIcon />}
                 sx={{
                   py: 1.5,
-                  background: 'linear-gradient(135deg, #6C63FF, #3F51B5)',
+                  background: 'linear-gradient(135deg, #1B3F6B, #143052)',
                   borderRadius: '12px',
                   fontSize: '1rem',
                   fontWeight: 700,
-                  boxShadow: '0 4px 15px rgba(108, 99, 255, 0.4)',
+                  boxShadow: '0 4px 15px rgba(27, 63, 107, 0.4)',
                   '&:hover': {
-                    background: 'linear-gradient(135deg, #5B52EE, #3545A0)',
-                    boxShadow: '0 6px 20px rgba(108, 99, 255, 0.5)',
+                    background: 'linear-gradient(135deg, #143052, #0A1C32)',
+                    boxShadow: '0 6px 20px rgba(27, 63, 107, 0.5)',
                   },
                 }}
               >
                 {loading ? 'Signing In...' : 'Sign In'}
               </Button>
             </form>
-
+ 
             <Box sx={{ mt: 3, textAlign: 'center' }}>
               <Typography variant="body2" color="text.secondary">
                 Don't have an account?{' '}

@@ -5,32 +5,32 @@ const getDesignTokens = (mode) => ({
     mode,
     ...(mode === 'light'
       ? {
-          primary: { main: '#1976D2', light: '#42A5F5', dark: '#1565C0' },
-          secondary: { main: '#6C63FF', light: '#9C94FF', dark: '#3F51B5' },
+          primary: { main: '#1B3F6B', light: '#3A69A0', dark: '#143052' },
+          secondary: { main: '#F07830', light: '#F39359', dark: '#D25C18' },
           success: { main: '#4CAF50', light: '#81C784', dark: '#388E3C' },
           warning: { main: '#FF9800', light: '#FFB74D', dark: '#F57C00' },
           error: { main: '#F44336', light: '#E57373', dark: '#D32F2F' },
           info: { main: '#2196F3', light: '#64B5F6', dark: '#1976D2' },
           background: {
-            default: '#F5F7FA',
+            default: '#F5EDE0',
             paper: '#FFFFFF',
           },
           text: {
-            primary: '#1A1A2E',
+            primary: '#1B3F6B',
             secondary: '#555770',
           },
           divider: 'rgba(0, 0, 0, 0.08)',
         }
       : {
-          primary: { main: '#42A5F5', light: '#64B5F6', dark: '#1976D2' },
-          secondary: { main: '#9C94FF', light: '#B8B2FF', dark: '#6C63FF' },
+          primary: { main: '#3A69A0', light: '#4E7FB8', dark: '#1B3F6B' },
+          secondary: { main: '#F39359', light: '#F6AE82', dark: '#F07830' },
           success: { main: '#66BB6A', light: '#81C784', dark: '#388E3C' },
           warning: { main: '#FFA726', light: '#FFB74D', dark: '#F57C00' },
           error: { main: '#EF5350', light: '#E57373', dark: '#D32F2F' },
           info: { main: '#42A5F5', light: '#64B5F6', dark: '#1976D2' },
           background: {
-            default: '#0F0F23',
-            paper: '#1A1A2E',
+            default: '#0F1E33',
+            paper: '#14253D',
           },
           text: {
             primary: '#E8E8F0',
@@ -82,10 +82,10 @@ const getDesignTokens = (mode) => ({
         },
         contained: {
           '&.MuiButton-containedPrimary': {
-            background: 'linear-gradient(135deg, #1976D2, #1565C0)',
+            background: 'linear-gradient(135deg, #1B3F6B, #143052)',
           },
           '&.MuiButton-containedSecondary': {
-            background: 'linear-gradient(135deg, #6C63FF, #3F51B5)',
+            background: 'linear-gradient(135deg, #F07830, #D25C18)',
           },
         },
       },
@@ -117,10 +117,10 @@ const getDesignTokens = (mode) => ({
             borderRadius: 10,
             transition: 'all 0.2s ease',
             '&:hover': {
-              boxShadow: '0 2px 8px rgba(25, 118, 210, 0.15)',
+              boxShadow: '0 2px 8px rgba(27, 63, 107, 0.15)',
             },
             '&.Mui-focused': {
-              boxShadow: '0 4px 12px rgba(25, 118, 210, 0.2)',
+              boxShadow: '0 4px 12px rgba(27, 63, 107, 0.2)',
             },
           },
         },

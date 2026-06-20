@@ -132,7 +132,7 @@ export default function ProfilePage() {
         <Grid item xs={12} md={4}>
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
             <Card sx={{ borderRadius: '16px', textAlign: 'center' }}>
-              <Box sx={{ height: 120, background: 'linear-gradient(135deg, #6C63FF, #3F51B5)', borderRadius: '16px 16px 0 0', position: 'relative' }}>
+              <Box sx={{ height: 120, background: 'linear-gradient(135deg, #1B3F6B, #143052)', borderRadius: '16px 16px 0 0', position: 'relative' }}>
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -156,7 +156,7 @@ export default function ProfilePage() {
                     src={getAvatarUrl(user?.avatar)}
                     sx={{
                       width: 90, height: 90, fontSize: '2rem', fontWeight: 800,
-                      background: 'linear-gradient(135deg, #42A5F5, #1976D2)',
+                      background: 'linear-gradient(135deg, #3A69A0, #1B3F6B)',
                       border: '4px solid white',
                       boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
                     }}
@@ -323,8 +323,8 @@ export default function ProfilePage() {
                       {editing ? (
                         <>
                           <Button startIcon={<Cancel />} onClick={() => setEditing(false)} sx={{ borderRadius: '10px' }}>Cancel</Button>
-                          <Button variant="contained" startIcon={loading ? <CircularProgress size={18} /> : <Save />} onClick={handleSaveProfile} disabled={loading}
-                            sx={{ background: 'linear-gradient(135deg, #6C63FF, #3F51B5)', borderRadius: '10px' }}>Save</Button>
+                           <Button variant="contained" startIcon={loading ? <CircularProgress size={18} /> : <Save />} onClick={handleSaveProfile} disabled={loading}
+                            sx={{ background: 'linear-gradient(135deg, #1B3F6B, #143052)', borderRadius: '10px' }}>Save</Button>
                         </>
                       ) : (
                         <Button variant="outlined" startIcon={<Edit />} onClick={() => setEditing(true)} sx={{ borderRadius: '10px' }}>Edit Profile</Button>
@@ -342,7 +342,7 @@ export default function ProfilePage() {
                     <TextField fullWidth label="New Password" type="password" value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} required sx={{ mb: 3 }}
                       helperText="Minimum 6 characters"
                     />
-                    <Button type="submit" variant="contained" disabled={loading} sx={{ background: 'linear-gradient(135deg, #6C63FF, #3F51B5)', borderRadius: '10px' }}>
+                    <Button type="submit" variant="contained" disabled={loading} sx={{ background: 'linear-gradient(135deg, #1B3F6B, #143052)', borderRadius: '10px' }}>
                       {loading ? 'Changing...' : 'Change Password'}
                     </Button>
                   </form>

@@ -148,12 +148,51 @@ export default function RegisterPage() {
       sx={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2,
         background: theme.palette.mode === 'dark'
-          ? 'linear-gradient(135deg, #0F0F23, #1A1A2E, #16213E)'
-          : 'linear-gradient(135deg, #667eea, #764ba2, #6C63FF)',
+          ? '#0F1E33'
+          : '#F5EDE0',
         position: 'relative', overflow: 'hidden',
       }}
     >
-      <Box sx={{ position: 'absolute', top: -80, left: -80, width: 400, height: 400, borderRadius: '50%', background: 'rgba(108, 99, 255, 0.08)', filter: 'blur(60px)' }} />
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '35vh',
+          zIndex: 0,
+          overflow: 'hidden',
+        }}
+      >
+        {/* Layered background curve 1 (lower opacity/accent orange) */}
+        <svg
+          viewBox="0 0 1440 320"
+          preserveAspectRatio="none"
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: theme.palette.mode === 'dark' ? 0.1 : 0.25 }}
+        >
+          <path
+            fill="#F07830"
+            d="M0,160L80,176C160,192,320,224,480,229.3C640,235,800,213,960,186.7C1120,160,1280,128,1360,112L1440,96L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,80,0L0,0Z"
+          />
+        </svg>
+        {/* Layered background curve 2 (main gradient wave) */}
+        <svg
+          viewBox="0 0 1440 320"
+          preserveAspectRatio="none"
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '90%' }}
+        >
+          <defs>
+            <linearGradient id="reg-wave-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1B3F6B" />
+              <stop offset="100%" stopColor="#F07830" />
+            </linearGradient>
+          </defs>
+          <path
+            fill="url(#reg-wave-grad)"
+            d="M0,192L80,186.7C160,181,320,171,480,181.3C640,192,800,224,960,229.3C1120,235,1280,213,1360,202.7L1440,192L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,80,0L0,0Z"
+          />
+        </svg>
+      </Box>
 
       <motion.div
         initial={{ opacity: 0, y: 30 }}
@@ -166,7 +205,7 @@ export default function RegisterPage() {
           <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}>Join EduConnect - SaiBalaji Junior College</Typography>
         </Box>
 
-        <Card sx={{ borderRadius: '20px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', background: theme.palette.mode === 'dark' ? 'rgba(26,26,46,0.95)' : 'rgba(255,255,255,0.95)' }}>
+        <Card sx={{ borderRadius: '20px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', background: theme.palette.mode === 'dark' ? 'rgba(20,37,61,0.95)' : 'rgba(255,255,255,0.95)' }}>
           <CardContent sx={{ p: 4 }}>
             <Stepper activeStep={activeStep} sx={{ mb: 3 }} alternativeLabel>
               {steps.map(label => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
@@ -195,7 +234,7 @@ export default function RegisterPage() {
                     onClick={() => setActiveStep(prev => prev + 1)}
                     endIcon={<ArrowForward />}
                     disabled={!canProceed()}
-                    sx={{ background: 'linear-gradient(135deg, #6C63FF, #3F51B5)', borderRadius: '10px', px: 3 }}
+                    sx={{ background: 'linear-gradient(135deg, #1B3F6B, #143052)', borderRadius: '10px', px: 3 }}
                   >
                     Next
                   </Button>
@@ -205,7 +244,7 @@ export default function RegisterPage() {
                     variant="contained"
                     disabled={loading}
                     startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <PersonAdd />}
-                    sx={{ background: 'linear-gradient(135deg, #6C63FF, #3F51B5)', borderRadius: '10px', px: 3 }}
+                    sx={{ background: 'linear-gradient(135deg, #1B3F6B, #143052)', borderRadius: '10px', px: 3 }}
                   >
                     {loading ? 'Registering...' : 'Register'}
                   </Button>

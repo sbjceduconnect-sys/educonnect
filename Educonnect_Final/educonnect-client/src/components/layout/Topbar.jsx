@@ -8,7 +8,7 @@ import {
   Menu as MenuIcon, Search, Notifications, DarkMode, LightMode, Settings,
   Logout, Person, MarkEmailRead, School, MenuBook, Announcement,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Capacitor } from '@capacitor/core';
 import { useAuth } from '../../contexts/AuthContext';
@@ -23,6 +23,7 @@ export default function Topbar({ onMenuClick, sidebarOpen }) {
   const { mode, toggleTheme } = useThemeMode();
   const { notifications, unreadCount, markAllRead } = useNotifications();
   const navigate = useNavigate();
+  const location = useLocation();
   const theme = useTheme();
 
   const [anchorElUser, setAnchorElUser] = useState(null);
@@ -32,6 +33,8 @@ export default function Topbar({ onMenuClick, sidebarOpen }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResults, setSearchResults] = useState({ courses: [], announcements: [], materials: [] });
+
+  const isDashboard = location.pathname === '/dashboard';
 
   const triggerSearch = async (query) => {
     if (!query || query.trim() === '') {
@@ -100,13 +103,16 @@ export default function Topbar({ onMenuClick, sidebarOpen }) {
         ml: { md: sidebarOpen ? '280px' : '72px' },
         width: { md: `calc(100% - ${sidebarOpen ? 280 : 72}px)` },
         transition: 'all 0.3s ease',
-        backdropFilter: 'blur(20px)',
-        background: theme.palette.mode === 'dark'
-          ? 'rgba(26, 26, 46, 0.85)'
-          : 'rgba(255, 255, 255, 0.85)',
-        borderBottom: `1px solid ${theme.palette.divider}`,
-        color: 'text.primary',
+        backdropFilter: isDashboard ? 'none' : 'blur(20px)',
+        background: isDashboard
+          ? 'transparent'
+          : (theme.palette.mode === 'dark'
+              ? 'rgba(26, 26, 46, 0.85)'
+              : 'rgba(255, 255, 255, 0.85)'),
+        borderBottom: isDashboard ? 'none' : `1px solid ${theme.palette.divider}`,
+        color: isDashboard ? '#FFFFFF' : 'text.primary',
         pt: Capacitor.isNativePlatform() ? 'env(safe-area-inset-top)' : 0,
+        zIndex: 1100,
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 1, sm: 2 } }}>
@@ -114,14 +120,14 @@ export default function Topbar({ onMenuClick, sidebarOpen }) {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <IconButton
             onClick={onMenuClick}
-            sx={{ display: { md: 'none' } }}
+            sx={{ display: { md: 'none' }, color: 'inherit' }}
           >
             <MenuIcon />
           </IconButton>
 
           <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem' }}>
-              {getGreeting()}, <span style={{ background: 'linear-gradient(135deg, #6C63FF, #3F51B5)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{user?.firstName || 'User'}</span> 👋
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: 'inherit' }}>
+              {getGreeting()}, <span style={{ color: '#F07830', fontWeight: 800 }}>{user?.firstName || 'User'}</span> 👋
             </Typography>
           </Box>
         </Box>
@@ -135,17 +141,19 @@ export default function Topbar({ onMenuClick, sidebarOpen }) {
             px: 2,
             py: 0.5,
             borderRadius: '12px',
-            bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+            bgcolor: isDashboard 
+              ? 'rgba(255, 255, 255, 0.12)' 
+              : (theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'),
             boxShadow: 'none',
-            border: `1px solid ${theme.palette.divider}`,
+            border: isDashboard ? '1px solid rgba(255, 255, 255, 0.2)' : `1px solid ${theme.palette.divider}`,
             transition: 'all 0.2s ease',
             cursor: 'pointer',
             '&:hover': {
-              borderColor: 'text.secondary',
+              borderColor: isDashboard ? 'rgba(255, 255, 255, 0.4)' : 'text.secondary',
             },
             '&:focus-within': {
-              border: `1px solid ${theme.palette.secondary.main}`,
-              boxShadow: '0 0 0 3px rgba(108, 99, 255, 0.1)',
+              border: isDashboard ? '1px solid #F07830' : `1px solid ${theme.palette.secondary.main}`,
+              boxShadow: isDashboard ? '0 0 0 3px rgba(240, 120, 48, 0.2)' : '0 0 0 3px rgba(108, 99, 255, 0.1)',
             },
           }}
           onClick={() => {
@@ -153,27 +161,27 @@ export default function Topbar({ onMenuClick, sidebarOpen }) {
             triggerSearch(searchQuery);
           }}
         >
-          <Search sx={{ color: 'text.secondary', mr: 1 }} fontSize="small" />
+          <Search sx={{ color: isDashboard ? 'rgba(255, 255, 255, 0.7)' : 'text.secondary', mr: 1 }} fontSize="small" />
           <InputBase
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleSearchKeyDown}
-            sx={{ flex: 1, fontSize: '0.875rem', cursor: 'pointer' }}
+            sx={{ flex: 1, fontSize: '0.875rem', cursor: 'pointer', color: 'inherit' }}
           />
         </Paper>
 
         {/* Right side */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <Tooltip title={`Switch to ${mode === 'light' ? 'dark' : 'light'} mode`}>
-            <IconButton onClick={toggleTheme} sx={{ borderRadius: '10px' }}>
+            <IconButton onClick={toggleTheme} sx={{ borderRadius: '10px', color: 'inherit' }}>
               {mode === 'dark' ? <LightMode fontSize="small" /> : <DarkMode fontSize="small" />}
             </IconButton>
           </Tooltip>
 
           {/* Notifications */}
           <Tooltip title="Notifications">
-            <IconButton onClick={(e) => setAnchorElNotif(e.currentTarget)} sx={{ borderRadius: '10px' }}>
+            <IconButton onClick={(e) => setAnchorElNotif(e.currentTarget)} sx={{ borderRadius: '10px', color: 'inherit' }}>
               <Badge badgeContent={unreadCount} color="error" max={9}>
                 <Notifications fontSize="small" />
               </Badge>
@@ -187,8 +195,9 @@ export default function Topbar({ onMenuClick, sidebarOpen }) {
                 src={getAvatarUrl(user?.avatar)}
                 sx={{
                   width: 35, height: 35, fontSize: '0.8rem', fontWeight: 700,
-                  background: 'linear-gradient(135deg, #6C63FF, #3F51B5)',
+                  background: 'linear-gradient(135deg, #1B3F6B, #F07830)',
                   cursor: 'pointer',
+                  border: isDashboard ? '1px solid rgba(255, 255, 255, 0.5)' : 'none',
                 }}
               >
                 {(user?.firstName?.[0] || '') + (user?.lastName?.[0] || '')}

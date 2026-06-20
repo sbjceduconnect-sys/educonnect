@@ -11,7 +11,7 @@ import { setAuthHeader } from '../../api/axiosInstance';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatDate } from '../../utils/helpers';
 
-const CHART_COLORS = ['#6C63FF', '#4CAF50', '#FF9800', '#F44336', '#2196F3'];
+const CHART_COLORS = ['#1B3F6B', '#F07830', '#4CAF50', '#FF9800', '#F44336'];
 
 export default function StudentDashboard() {
   const { accessToken } = useAuth();
@@ -146,28 +146,28 @@ export default function StudentDashboard() {
                       <AreaChart width={chartWidth} height={240} data={performanceData}>
                         <defs>
                           <linearGradient id="colorPercentage" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#6C63FF" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#6C63FF" stopOpacity={0} />
+                            <stop offset="5%" stopColor="#1B3F6B" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#1B3F6B" stopOpacity={0} />
                           </linearGradient>
                         </defs>
                         <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                         <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
                         <Tooltip />
-                        <Area type="monotone" dataKey="percentage" stroke="#6C63FF" strokeWidth={2} fill="url(#colorPercentage)" />
+                        <Area type="monotone" dataKey="percentage" stroke="#1B3F6B" strokeWidth={2} fill="url(#colorPercentage)" />
                       </AreaChart>
                     ) : (
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={performanceData}>
                           <defs>
                             <linearGradient id="colorPercentage" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#6C63FF" stopOpacity={0.3} />
-                              <stop offset="95%" stopColor="#6C63FF" stopOpacity={0} />
+                              <stop offset="5%" stopColor="#1B3F6B" stopOpacity={0.3} />
+                              <stop offset="95%" stopColor="#1B3F6B" stopOpacity={0} />
                             </linearGradient>
                           </defs>
                           <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                           <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
                           <Tooltip />
-                          <Area type="monotone" dataKey="percentage" stroke="#6C63FF" strokeWidth={2} fill="url(#colorPercentage)" />
+                          <Area type="monotone" dataKey="percentage" stroke="#1B3F6B" strokeWidth={2} fill="url(#colorPercentage)" />
                         </AreaChart>
                       </ResponsiveContainer>
                     )}
@@ -223,7 +223,7 @@ export default function StudentDashboard() {
                     {data.announcements.map((ann, i) => (
                       <ListItem key={ann.id || i} sx={{ px: 0, py: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
                         <ListItemIcon>
-                          <Avatar sx={{ bgcolor: 'rgba(108, 99, 255, 0.1)', color: '#6C63FF', width: 36, height: 36, borderRadius: '10px' }}>
+                          <Avatar sx={{ bgcolor: 'rgba(27, 63, 107, 0.1)', color: '#1B3F6B', width: 36, height: 36, borderRadius: '10px' }}>
                             <Announcement fontSize="small" />
                           </Avatar>
                         </ListItemIcon>

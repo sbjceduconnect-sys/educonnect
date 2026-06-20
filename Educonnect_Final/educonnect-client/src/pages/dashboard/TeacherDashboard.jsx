@@ -78,7 +78,7 @@ export default function TeacherDashboard() {
                         <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                         <YAxis tick={{ fontSize: 12 }} />
                         <Tooltip />
-                        <Bar dataKey="students" fill="#6C63FF" radius={[6, 6, 0, 0]} />
+                        <Bar dataKey="students" fill="#1B3F6B" radius={[6, 6, 0, 0]} />
                       </BarChart>
                     ) : (
                       <ResponsiveContainer width="100%" height="100%">
@@ -87,7 +87,7 @@ export default function TeacherDashboard() {
                           <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                           <YAxis tick={{ fontSize: 12 }} />
                           <Tooltip />
-                          <Bar dataKey="students" fill="#6C63FF" radius={[6, 6, 0, 0]} />
+                          <Bar dataKey="students" fill="#1B3F6B" radius={[6, 6, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     )}
@@ -110,7 +110,7 @@ export default function TeacherDashboard() {
                     { icon: <QrCode2 />, text: 'Generate QR Attendance', color: '#4CAF50', path: '/attendance' },
                     { icon: <HistoryEdu />, text: 'Create Lesson Plan', color: '#FF9800', path: '/lesson-plans' },
                     { icon: <Announcement />, text: 'Post Announcement', color: '#2196F3', path: '/announcements' },
-                    { icon: <EventNote />, text: 'View Schedule', color: '#6C63FF', path: '/timetable' },
+                    { icon: <EventNote />, text: 'View Schedule', color: '#1B3F6B', path: '/timetable' },
                   ].map((action, i) => (
                     <ListItem key={i} onClick={() => navigate(action.path)} sx={{ px: 0, py: 1, cursor: 'pointer', borderRadius: '10px', '&:hover': { bgcolor: 'action.hover' } }}>
                       <ListItemIcon>

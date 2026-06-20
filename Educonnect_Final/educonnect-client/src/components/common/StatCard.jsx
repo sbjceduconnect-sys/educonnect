@@ -4,10 +4,10 @@ import { TrendingUp, TrendingDown, TrendingFlat } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
 const colorMap = {
-  blue: { bg: 'rgba(33, 150, 243, 0.1)', color: '#2196F3', dark: 'rgba(33, 150, 243, 0.15)' },
+  blue: { bg: 'rgba(27, 63, 107, 0.1)', color: '#1B3F6B', dark: 'rgba(27, 63, 107, 0.2)' },
   green: { bg: 'rgba(76, 175, 80, 0.1)', color: '#4CAF50', dark: 'rgba(76, 175, 80, 0.15)' },
-  orange: { bg: 'rgba(255, 152, 0, 0.1)', color: '#FF9800', dark: 'rgba(255, 152, 0, 0.15)' },
-  purple: { bg: 'rgba(108, 99, 255, 0.1)', color: '#6C63FF', dark: 'rgba(108, 99, 255, 0.15)' },
+  orange: { bg: 'rgba(240, 120, 48, 0.1)', color: '#F07830', dark: 'rgba(240, 120, 48, 0.2)' },
+  purple: { bg: 'rgba(27, 63, 107, 0.1)', color: '#1B3F6B', dark: 'rgba(27, 63, 107, 0.2)' },
   red: { bg: 'rgba(244, 67, 54, 0.1)', color: '#F44336', dark: 'rgba(244, 67, 54, 0.15)' },
   teal: { bg: 'rgba(0, 150, 136, 0.1)', color: '#009688', dark: 'rgba(0, 150, 136, 0.15)' },
 };
