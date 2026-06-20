@@ -62,6 +62,7 @@ export const materialApi = {
 };
 
 export const attendanceApi = {
+  list: (params) => api.get('/attendance', { params }),
   mark: (data) => api.post('/attendance', data),
   generateQR: (data) => api.post('/attendance/qr/generate', data),
   scanQR: (token) => api.post('/attendance/qr/scan', { token }),

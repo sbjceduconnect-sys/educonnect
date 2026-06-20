@@ -75,54 +75,6 @@ export default function AttendanceMarkerPage() {
   // Pending action to run after permission is confirmed
   const [pendingQrAction, setPendingQrAction] = useState(null);
 
-  // Manual QR scanner states
-  const [manualScannerActive, setManualScannerActive] = useState(false);
-  const manualScannerRef = useRef(null);
-
-  // Hook for scanning student QR codes in manual mode
-  useEffect(() => {
-    let html5QrcodeScanner = null;
-    if (manualScannerActive) {
-      html5QrcodeScanner = new Html5QrcodeScanner(
-        "manual-reader-container",
-        { fps: 10, qrbox: { width: 200, height: 200 } },
-        false
-      );
-
-      const onScanSuccess = (decodedText) => {
-        html5QrcodeScanner.clear();
-        setManualScannerActive(false);
-        
-        // Find student in class list by id, enrollmentNo, or username
-        const matchedStudent = students.find(
-          (s) => String(s.id) === decodedText || String(s.profile?.enrollmentNo) === decodedText || s.username === decodedText
-        );
-        if (matchedStudent) {
-          handleStatusChange(matchedStudent.id, 'present');
-          toast.success(`Marked ${matchedStudent.firstName} ${matchedStudent.lastName} as Present!`);
-        } else {
-          toast.error('Student not found in this class list');
-        }
-      };
-
-      const onScanFailure = (error) => {
-        // quiet fail
-      };
-
-      html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-    }
-
-    return () => {
-      if (html5QrcodeScanner) {
-        try {
-          html5QrcodeScanner.clear();
-        } catch (e) {
-          // ignore
-        }
-      }
-    };
-  }, [manualScannerActive, students]);
-
   // Fetch teacher's courses and subjects
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -144,35 +96,42 @@ export default function AttendanceMarkerPage() {
     }
   }, [accessToken, user?.id]);
 
-  // Fetch students when course changes
+  const loadAttendanceStates = async () => {
+    if (!selectedCourseId || !selectedSubjectId || !attendanceDate) return;
+    setStudentsLoading(true);
+    try {
+      setAuthHeader(accessToken);
+      const [studentsRes, recordsRes] = await Promise.all([
+        courseApi.getStudents(selectedCourseId),
+        attendanceApi.list({ courseId: selectedCourseId, subjectId: selectedSubjectId, date: attendanceDate })
+      ]);
+      
+      const studentList = studentsRes.data.data || [];
+      setStudents(studentList);
+      
+      const existing = recordsRes.data.data || [];
+      const initial = {};
+      studentList.forEach((s) => {
+        const dbRec = existing.find(r => String(r.student) === String(s.id) || String(r.studentId) === String(s.id));
+        initial[s.id] = dbRec ? dbRec.status.toLowerCase() : '';
+      });
+      setRecords(initial);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to load attendance directory');
+    } finally {
+      setStudentsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchStudents = async () => {
-      if (!selectedCourseId) {
-        setStudents([]);
-        return;
-      }
-      setStudentsLoading(true);
-      try {
-        setAuthHeader(accessToken);
-        const res = await courseApi.getStudents(selectedCourseId);
-        const studentList = res.data.data || [];
-        setStudents(studentList);
-        
-        // Initialize records to empty
-        const initial = {};
-        studentList.forEach((s) => {
-          initial[s.id] = '';
-        });
-        setRecords(initial);
-      } catch (err) {
-        console.error(err);
-        toast.error('Failed to load enrolled students');
-      } finally {
-        setStudentsLoading(false);
-      }
-    };
-    fetchStudents();
-  }, [selectedCourseId, accessToken]);
+    if (selectedCourseId && selectedSubjectId && attendanceDate && accessToken) {
+      loadAttendanceStates();
+    } else {
+      setStudents([]);
+      setRecords({});
+    }
+  }, [selectedCourseId, selectedSubjectId, attendanceDate, accessToken]);
 
   // QR timer countdown
   useEffect(() => {
@@ -462,13 +421,13 @@ export default function AttendanceMarkerPage() {
                 <Button
                   size="small"
                   variant="contained"
-                  onClick={() => setManualScannerActive(!manualScannerActive)}
-                  color={manualScannerActive ? "error" : "primary"}
-                  startIcon={<QrCode />}
+                  onClick={loadAttendanceStates}
+                  color="primary"
+                  startIcon={<Refresh />}
                   disabled={students.length === 0}
-                  sx={{ borderRadius: '8px', textTransform: 'none', background: manualScannerActive ? undefined : 'linear-gradient(135deg, #6C63FF, #3F51B5)' }}
+                  sx={{ borderRadius: '8px', textTransform: 'none', background: 'linear-gradient(135deg, #6C63FF, #3F51B5)' }}
                 >
-                  {manualScannerActive ? 'Cancel Scanner' : 'Scan Student QR'}
+                  Refresh List
                 </Button>
                 <Button size="small" variant="outlined" onClick={() => handleMarkAll('present')} color="success" sx={{ borderRadius: '8px', textTransform: 'none' }}>
                   Mark All Present
@@ -478,13 +437,6 @@ export default function AttendanceMarkerPage() {
                 </Button>
               </Box>
             </Box>
-            
-            {manualScannerActive && (
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
-                <Box id="manual-reader-container" sx={{ width: '100%', maxWidth: 300, border: '1px solid', borderColor: 'divider', borderRadius: '12px', overflow: 'hidden', mb: 1 }}></Box>
-                <Typography variant="caption" color="text.secondary">Scan student's ID QR code to mark them as Present.</Typography>
-              </Box>
-            )}
 
             <Divider />
 

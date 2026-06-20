@@ -13,10 +13,12 @@ class AttendanceView(APIView):
 
     def get(self, request):
         qs = AttendanceRecord.objects.all()
-        course = request.query_params.get('course')
-        student = request.query_params.get('student')
+        course = request.query_params.get('course') or request.query_params.get('courseId')
+        subject = request.query_params.get('subject') or request.query_params.get('subjectId')
+        student = request.query_params.get('student') or request.query_params.get('studentId')
         date = request.query_params.get('date')
         if course: qs = qs.filter(course_id=course)
+        if subject: qs = qs.filter(subject_id=subject)
         if student: qs = qs.filter(student_id=student)
         if date: qs = qs.filter(date=date)
         return api_success(data=AttendanceSerializer(qs, many=True).data)
