@@ -25,13 +25,15 @@ else:
 teacher_math = User.objects.filter(email='math@sbjc.edu').first()
 teacher_chem = User.objects.filter(email='chemistry@sbjc.edu').first()
 teacher_arun = User.objects.filter(email='teacher@sbjc.edu').first()
+teacher_smruti = User.objects.filter(first_name__icontains='Smruti').first() or User.objects.filter(last_name__icontains='Panigrahy').first()
 fallback_teacher = User.objects.filter(role='teacher').first() or User.objects.first()
 
 teacher_math_id = teacher_math.id if teacher_math else fallback_teacher.id
 teacher_chem_id = teacher_chem.id if teacher_chem else fallback_teacher.id
 teacher_arun_id = teacher_arun.id if teacher_arun else fallback_teacher.id
+teacher_smruti_id = teacher_smruti.id if teacher_smruti else teacher_arun_id
 
-print(f"Resolved teachers: Math ({teacher_math_id}), Chem ({teacher_chem_id}), Arun/General ({teacher_arun_id})")
+print(f"Resolved teachers: Math ({teacher_math_id}), Chem ({teacher_chem_id}), Arun/General ({teacher_arun_id}), Smruti ({teacher_smruti_id})")
 
 # 3. Dynamic search & create helper for subjects
 def find_subject_by_key(code_or_name):
@@ -41,14 +43,15 @@ def find_subject_by_key(code_or_name):
         return sub
         
     search_terms = {
-        '12SCI-ENG': ['12SCI-ENG', '12ENG', 'English'],
-        '12SCI-GEO': ['12SCI-GEO', '12GEO', 'Geography'],
-        '12SCI-IT': ['12SCI-IT', '12COM-IT', '12IT', 'Information Technology', 'IT'],
-        '12SCI-MAR': ['12SCI-MAR', '12MAR', 'Marathi'],
+        '12ENG': ['12ENG', '12SCI-ENG', 'English'],
+        '12GEO': ['12GEO', '12SCI-GEO', 'Geography'],
+        '12IT': ['12IT', '12SCI-IT', '12COM-IT', 'Information Technology', 'IT'],
         '12PHY': ['12PHY', 'Physics'],
         '12CHEM': ['12CHEM', 'Chemistry'],
         '12MATHS': ['12MATHS', 'Mathematics', 'Maths'],
         '12BIO': ['12BIO', 'Biology'],
+        '12BL': ['12BL', 'Body Language', 'Biology Lab', 'Biology Lab / Practical'],
+        '12PT': ['12PT', 'Physical Training', 'PT'],
     }
     
     terms = search_terms.get(code_or_name, [code_or_name])
@@ -66,7 +69,7 @@ def get_or_create_subject(code_key, name_default, teacher_id, type_default='theo
     sub = find_subject_by_key(code_key)
     if sub:
         # Update teacher if not set
-        if not sub.teacher_id:
+        if teacher_id and not sub.teacher_id:
             sub.teacher_id = teacher_id
             sub.save()
         return sub
@@ -84,17 +87,16 @@ def get_or_create_subject(code_key, name_default, teacher_id, type_default='theo
 
 # 4. Resolve/Create all required subjects
 subjects_map = {
-    '12PHY': get_or_create_subject('12PHY', 'Physics', teacher_arun_id),
-    '12CHEM': get_or_create_subject('12CHEM', 'Chemistry', teacher_chem_id),
-    '12MATHS': get_or_create_subject('12MATHS', 'Mathematics', teacher_math_id),
-    '12BIO': get_or_create_subject('12BIO', 'Biology', teacher_math_id),
-    '12SCI-ENG': get_or_create_subject('12SCI-ENG', 'English', teacher_arun_id),
-    '12SCI-GEO': get_or_create_subject('12SCI-GEO', 'Geography', teacher_chem_id),
-    '12SCI-IT': get_or_create_subject('12SCI-IT', 'Information Technology', teacher_arun_id),
-    '12SCI-MAR': get_or_create_subject('12SCI-MAR', 'Marathi', teacher_arun_id),
-    '12BL': get_or_create_subject('12BL', 'Biology Lab / Practical', teacher_math_id, 'practical'),
-    '12PT': get_or_create_subject('12PT', 'Physical Training', teacher_arun_id, 'practical'),
-    '12TEST': get_or_create_subject('12TEST', 'Weekly Assessment / Test', teacher_arun_id, 'theory'),
+    '12PHY': get_or_create_subject('12PHY', 'Physics', teacher_smruti_id),
+    '12CHEM': get_or_create_subject('12CHEM', 'Chemistry', teacher_smruti_id),
+    '12MATHS': get_or_create_subject('12MATHS', 'Mathematics', teacher_smruti_id),
+    '12BIO': get_or_create_subject('12BIO', 'Biology', teacher_smruti_id),
+    '12ENG': get_or_create_subject('12ENG', 'English', None),
+    '12GEO': get_or_create_subject('12GEO', 'Geography', None),
+    '12IT': get_or_create_subject('12IT', 'Information Technology', None),
+    '12BL': get_or_create_subject('12BL', 'Body Language', None, 'practical'),
+    '12PT': get_or_create_subject('12PT', 'Physical Training', None, 'practical'),
+    '12TEST': get_or_create_subject('12TEST', 'Weekly Assessment / Test', None, 'theory'),
 }
 
 # Helper function to get subject and teacher info for slot mapping
@@ -131,19 +133,19 @@ times = [
 # Timetable XIIth A Science
 # Row structure: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday]
 # Period 1
-p1_a = ['12MATHS', '12CHEM', '12MATHS', '12PHY', '12SCI-ENG', '12PHY']
+p1_a = ['12MATHS', '12CHEM', '12MATHS', '12PHY', '12ENG', '12PHY']
 # Period 2
 p2_a = ['12MATHS', '12PHY', '12MATHS', '12PHY', '12CHEM', '12CHEM']
 # Period 3
-p3_a = ['12SCI-IT', '12SCI-ENG', '12CHEM', '12MATHS', '12SCI-IT', '12CHEM']
+p3_a = ['12IT', '12ENG', '12CHEM', '12MATHS', '12IT', '12CHEM']
 # Period 4
-p4_a = ['12CHEM', '12SCI-IT', '12PHY', '12CHEM', '12MATHS', '12SCI-GEO']
+p4_a = ['12CHEM', '12IT', '12PHY', '12CHEM', '12MATHS', '12GEO']
 # Period 5
-p5_a = ['12BL', '12PT', '12SCI-ENG', '12CHEM', '12SCI-GEO', '12TEST']
+p5_a = ['12BL', '12PT', '12ENG', '12CHEM', '12GEO', '12TEST']
 # Period 6
-p6_a = ['12PHY', '12MATHS', '12SCI-GEO', '12SCI-ENG', '12BL', None]
+p6_a = ['12PHY', '12MATHS', '12GEO', '12ENG', '12BL', None]
 # Period 7
-p7_a = ['12PHY', '12MATHS', '12SCI-IT', '12SCI-GEO', '12PHY', None]
+p7_a = ['12PHY', '12MATHS', '12IT', '12GEO', '12PHY', None]
 
 periods_a = [p1_a, p2_a, p3_a, p4_a, p5_a, p6_a, p7_a]
 
@@ -177,19 +179,19 @@ for year in ['2025-2026', '2026-27']:
 # Timetable XIIth B Science
 # Row structure: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday]
 # Period 1
-p1_b = ['12PHY', '12PHY', '12CHEM', '12MATHS', '12SCI-ENG', '12MATHS']
+p1_b = ['12PHY', '12PHY', '12CHEM', '12MATHS', '12ENG', '12MATHS']
 # Period 2
 p2_b = ['12PHY', '12MATHS', '12PHY', '12BIO', '12BIO', '12PHY']
 # Period 3
-p3_b = ['12BIO', '12MATHS', '12SCI-IT', '12BIO', '12MATHS', '12TEST']
+p3_b = ['12BIO', '12MATHS', '12IT', '12BIO', '12MATHS', '12TEST']
 # Period 4
-p4_b = ['12SCI-ENG', '12BIO', '12MATHS', '12SCI-GEO', '12CHEM', '12CHEM']
+p4_b = ['12ENG', '12BIO', '12MATHS', '12GEO', '12CHEM', '12CHEM']
 # Period 5
-p5_b = ['12CHEM', '12SCI-IT', '12SCI-GEO', '12PHY', '12PHY', '12CHEM']
+p5_b = ['12CHEM', '12IT', '12GEO', '12PHY', '12PHY', '12CHEM']
 # Period 6
-p6_b = ['12SCI-GEO', '12SCI-ENG', '12BIO', '12CHEM', '12SCI-GEO', None]
+p6_b = ['12GEO', '12ENG', '12BIO', '12CHEM', '12GEO', None]
 # Period 7
-p7_b = ['12MATHS', '12CHEM', '12BIO', '12SCI-IT', '12BL', None]
+p7_b = ['12MATHS', '12CHEM', '12BIO', '12IT', '12BL', None]
 
 periods_b = [p1_b, p2_b, p3_b, p4_b, p5_b, p6_b, p7_b]
 
