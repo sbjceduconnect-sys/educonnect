@@ -55,16 +55,6 @@ python manage.py runserver        # starts at http://localhost:8000
 
 ---
 
-## 🔑 Institutional Codes
-
-| Role    | Code                |
-|---------|---------------------|
-| Admin   | `SBJC-ADMIN-2026`   |
-| Teacher | `SBJC-TEACH-2026`   |
-| Student | *(no code required)* |
-
----
-
 ## 📡 API Endpoints (all prefixed `/api/v1/`)
 
 | Method | Endpoint | Description |
