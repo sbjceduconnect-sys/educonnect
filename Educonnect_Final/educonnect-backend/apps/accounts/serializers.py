@@ -15,7 +15,9 @@ class UserProfileSerializer(CamelCaseSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['department_id'] = instance.user.department_id
+        dept_id = instance.user.department_id
+        data['department_id'] = dept_id
+        data['departmentId'] = dept_id
         return data
 
 
@@ -38,6 +40,7 @@ class UserSerializer(CamelCaseSerializer):
         if profile_data and 'department_id' in profile_data:
             dept_id = profile_data.pop('department_id')
             instance.department_id = dept_id
+            validated_data.pop('department', None)
 
         # Update user fields
         for attr, value in validated_data.items():
