@@ -103,6 +103,17 @@ export default function ProfilePage() {
     }
   };
 
+  const handleCancel = () => {
+    setEditing(false);
+    if (user) {
+      setFormData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        profile: { ...user.profile },
+      });
+    }
+  };
+
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -332,7 +343,7 @@ export default function ProfilePage() {
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1.5, mt: 3 }}>
                       {editing ? (
                         <>
-                          <Button startIcon={<Cancel />} onClick={() => setEditing(false)} sx={{ borderRadius: '10px' }}>Cancel</Button>
+                          <Button startIcon={<Cancel />} onClick={handleCancel} sx={{ borderRadius: '10px' }}>Cancel</Button>
                            <Button variant="contained" startIcon={loading ? <CircularProgress size={18} /> : <Save />} onClick={handleSaveProfile} disabled={loading}
                             sx={{ background: 'linear-gradient(135deg, #1B3F6B, #143052)', borderRadius: '10px' }}>Save</Button>
                         </>
