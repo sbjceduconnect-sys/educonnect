@@ -20,10 +20,12 @@ class ExamSerializer(CamelCaseSerializer):
 class ResultSerializer(CamelCaseSerializer):
     marks_obtained = serializers.FloatField(source='marks')
     student_id = serializers.IntegerField(source='student.id', read_only=True)
-    exam_id = serializers.IntegerField(source='exam.id', read_only=True)
+    exam_id = ExamSerializer(source='exam', read_only=True)
+    subject_id = serializers.IntegerField(source='exam.subject.id', read_only=True)
     max_marks = serializers.IntegerField(source='exam.max_marks', read_only=True)
 
     class Meta:
         model = Result
         fields = '__all__'
         read_only_fields = ['grade', 'created_at']
+

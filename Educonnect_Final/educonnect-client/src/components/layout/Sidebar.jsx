@@ -101,18 +101,38 @@ export default function Sidebar({ open, onToggle, mobileOpen, onMobileClose }) {
               <Box
                 sx={{
                   width: 40, height: 40, borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #6C63FF, #3F51B5)',
+                  background: 'linear-gradient(135deg, #1B3F6B, #F07830)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 4px 15px rgba(108, 99, 255, 0.3)',
+                  boxShadow: '0 4px 15px rgba(240, 120, 48, 0.3)',
                 }}
               >
                 <Typography sx={{ fontSize: '1.3rem' }}>🎓</Typography>
               </Box>
               <Box>
-                <Typography variant="subtitle1" sx={{ fontWeight: 800, lineHeight: 1.2, background: 'linear-gradient(135deg, #6C63FF, #3F51B5)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: 900,
+                    lineHeight: 1.2,
+                    background: 'linear-gradient(135deg, #1B3F6B, #F07830)',
+                    backgroundImage: 'linear-gradient(135deg, #1B3F6B, #F07830)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    display: 'block',
+                  }}
+                >
                   EduConnect
                 </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                    color: '#F07830',
+                    display: 'block',
+                    letterSpacing: '0.3px',
+                  }}
+                >
                   SaiBalaji Jr. College
                 </Typography>
               </Box>
@@ -182,7 +202,7 @@ export default function Sidebar({ open, onToggle, mobileOpen, onMobileClose }) {
                       <Box
                         sx={{
                           width: 4, height: 24, borderRadius: 2,
-                          background: 'linear-gradient(180deg, #6C63FF, #3F51B5)',
+                          background: 'linear-gradient(180deg, #1B3F6B, #F07830)',
                           position: 'absolute', right: 0,
                         }}
                       />
@@ -211,7 +231,7 @@ export default function Sidebar({ open, onToggle, mobileOpen, onMobileClose }) {
               src={getAvatarUrl(user?.avatar)}
               sx={{
                 width: 36, height: 36, fontSize: '0.85rem',
-                background: 'linear-gradient(135deg, #6C63FF, #3F51B5)',
+                background: 'linear-gradient(135deg, #1B3F6B, #F07830)',
               }}
             >
               {(user.firstName?.[0] || '') + (user.lastName?.[0] || '')}

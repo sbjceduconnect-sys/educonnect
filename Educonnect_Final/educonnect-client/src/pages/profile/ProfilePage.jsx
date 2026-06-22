@@ -22,6 +22,7 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({});
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '' });
   const [showPwd, setShowPwd] = useState(false);
+  const [showNewPwd, setShowNewPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [departments, setDepartments] = useState([]);
@@ -120,7 +121,10 @@ export default function ProfilePage() {
     setError('');
     try {
       setAuthHeader(accessToken);
-      await authApi.changePassword(passwordData);
+      await authApi.changePassword({
+        oldPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
       toast.success('Password changed successfully');
       setPasswordData({ currentPassword: '', newPassword: '' });
     } catch (err) {
@@ -360,8 +364,9 @@ export default function ProfilePage() {
                     <TextField fullWidth label="Current Password" type={showPwd ? 'text' : 'password'} value={passwordData.currentPassword} onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })} required sx={{ mb: 2 }}
                       InputProps={{ endAdornment: <InputAdornment position="end"><IconButton onClick={() => setShowPwd(!showPwd)} size="small">{showPwd ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}</IconButton></InputAdornment> }}
                     />
-                    <TextField fullWidth label="New Password" type="password" value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} required sx={{ mb: 3 }}
+                    <TextField fullWidth label="New Password" type={showNewPwd ? 'text' : 'password'} value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} required sx={{ mb: 3 }}
                       helperText="Minimum 6 characters"
+                      InputProps={{ endAdornment: <InputAdornment position="end"><IconButton onClick={() => setShowNewPwd(!showNewPwd)} size="small">{showNewPwd ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}</IconButton></InputAdornment> }}
                     />
                     <Button type="submit" variant="contained" disabled={loading} sx={{ background: 'linear-gradient(135deg, #1B3F6B, #143052)', borderRadius: '10px' }}>
                       {loading ? 'Changing...' : 'Change Password'}

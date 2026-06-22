@@ -49,6 +49,23 @@ def heuristic_summarize(text, format_type='bullet-points'):
         topic = clean_words[0].capitalize() if clean_words else text.strip().capitalize()
         if not topic:
             topic = "General Subject"
+            
+        # Check if the input is extremely short (e.g. just a keyword/topic)
+        if len(text.strip().split()) < 15:
+            return (
+                f"# AI Summary Offline Fallback: {topic}\n\n"
+                f"> **Note**: You entered a short keyword/topic: \"{text}\".\n\n"
+                f"The application is currently running in **local fallback mode** because no Gemini API Key is configured.\n"
+                f"In local fallback mode, the summarizer can only analyze and extract key sentences from a long lecture transcript and cannot generate summaries from a keyword alone.\n\n"
+                f"### How to enable Gemini AI Summarization:\n"
+                f"1. Get a free Gemini API Key from [Google AI Studio](https://aistudio.google.com/).\n"
+                f"2. Add it to your backend `.env` file:\n"
+                f"   ```env\n"
+                f"   GEMINI_API_KEY=your_api_key_here\n"
+                f"   ```\n"
+                f"3. Restart the backend server."
+            )
+            
         if format_type == 'detailed':
             return f"# Detailed Lecture Summary: {topic}\n\nThe lecture introduces and emphasizes the core concept of **{topic}**.\n\n* Key Concept: {text}\n* Discussion: Detailed content for this topic should be expanded in the lecture transcript."
         elif format_type == 'checklist':

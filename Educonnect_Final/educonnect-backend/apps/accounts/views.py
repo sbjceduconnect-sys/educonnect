@@ -135,20 +135,32 @@ class ChangePasswordView(APIView):
 class ResetPasswordView(APIView):
     permission_classes = [AllowAny]
 
-    def post(self, request, token):
+    def post(self, request, token=None):
+        from django.utils import timezone
+        
+        email = request.data.get('email', '').strip().lower()
+        code = request.data.get('code', '').strip()
         password = request.data.get('password')
-        if not password:
-            return api_error("Password is required.", status=400)
-        # Mock reset: check if user exists by email if passed, else return success
-        email = request.data.get('email')
-        if email:
-            try:
-                user = User.objects.get(email=email)
-                user.set_password(password)
-                user.save()
-                return api_success(message="Password reset successfully.")
-            except User.DoesNotExist:
-                pass
+        
+        if not email or not code or not password:
+            return api_error("Email, verification code, and password are required.", status=400)
+            
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return api_error("Invalid email, verification code, or code has expired.", status=400)
+            
+        if not user.reset_code or user.reset_code != code:
+            return api_error("Invalid email, verification code, or code has expired.", status=400)
+            
+        if not user.reset_code_expires_at or timezone.now() > user.reset_code_expires_at:
+            return api_error("Invalid email, verification code, or code has expired.", status=400)
+            
+        user.set_password(password)
+        user.reset_code = None
+        user.reset_code_expires_at = None
+        user.save(update_fields=['password', 'reset_code', 'reset_code_expires_at'])
+        
         return api_success(message="Password reset successfully.")
 
 
@@ -163,12 +175,48 @@ class ForgotPasswordView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        email = request.data.get('email', '')
+        import random
+        import datetime
+        from django.utils import timezone
+        
+        email = request.data.get('email', '').strip().lower()
+        if not email:
+            return api_error("Email is required.", status=400)
+            
         try:
             user = User.objects.get(email=email)
-            return api_success(message="Password reset instructions sent to your email.")
+            code = f"{random.randint(100000, 999999)}"
+            user.reset_code = code
+            user.reset_code_expires_at = timezone.now() + datetime.timedelta(minutes=10)
+            user.save(update_fields=['reset_code', 'reset_code_expires_at'])
+            
+            print("\n" + "="*60)
+            print(f"[PASSWORD RESET] Verification code for {email} is: {code}")
+            print("="*60 + "\n")
+            
+            # Send the real email containing the code if SMTP is configured
+            from django.core.mail import send_mail
+            from django.conf import settings
+            
+            subject = "EduConnect - Password Reset Verification Code"
+            message = f"Hello,\n\nYour password reset verification code is: {code}\n\nThis code will expire in 10 minutes.\n\nBest regards,\nEduConnect Team"
+            
+            try:
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [email],
+                    fail_silently=False,
+                )
+            except Exception as e:
+                print(f"Failed to send email: {str(e)}")
+            
+            return api_success(
+                message="Verification code sent to your email."
+            )
         except User.DoesNotExist:
-            return api_success(message="If this email exists, reset instructions will be sent.")
+            return api_success(message="If this email exists, a verification code will be sent.")
 
 
 class UserListView(APIView):

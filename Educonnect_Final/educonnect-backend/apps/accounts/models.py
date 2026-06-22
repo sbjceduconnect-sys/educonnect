@@ -23,6 +23,8 @@ class User(AbstractUser):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     current_session_id = models.CharField(max_length=255, null=True, blank=True)
+    reset_code = models.CharField(max_length=6, blank=True, null=True)
+    reset_code_expires_at = models.DateTimeField(blank=True, null=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
