@@ -110,13 +110,22 @@ class ResultListView(APIView):
             if not student_id or not exam_id:
                 continue
                 
+            # Check if this exam has published results
+            is_exam_published = Result.objects.filter(exam_id=exam_id, is_published=True).exists()
+            if is_exam_published and request.user.role != 'admin':
+                return api_error("Published results cannot be edited by teachers. Only administrators can edit published results.", status=403)
+                
+            defaults = {
+                'marks': marks,
+                'remarks': remarks
+            }
+            if is_exam_published:
+                defaults['is_published'] = True
+
             obj, _ = Result.objects.update_or_create(
                 student_id=student_id,
                 exam_id=exam_id,
-                defaults={
-                    'marks': marks,
-                    'remarks': remarks
-                }
+                defaults=defaults
             )
             saved.append(obj)
         return api_success(data={"saved": len(saved)}, message=f"{len(saved)} results saved.", status=201)
@@ -137,12 +146,24 @@ class ResultBulkView(APIView):
         except Exam.DoesNotExist: 
             return api_error("Exam not found.", status=404)
             
+        # Check if the exam results are already published
+        is_exam_published = Result.objects.filter(exam=exam, is_published=True).exists()
+        if is_exam_published and request.user.role != 'admin':
+            return api_error("Published results cannot be edited by teachers. Only administrators can edit published results.", status=403)
+
         saved = []
         for r in results_data:
+            defaults = {
+                'marks': r.get('marks', 0), 
+                'remarks': r.get('remarks', '')
+            }
+            if is_exam_published:
+                defaults['is_published'] = True
+
             obj, _ = Result.objects.update_or_create(
                 student_id=r['student_id'], 
                 exam=exam,
-                defaults={'marks': r.get('marks', 0), 'remarks': r.get('remarks', '')},
+                defaults=defaults,
             )
             saved.append(obj)
         return api_success(data={"saved": len(saved)}, message=f"{len(saved)} results saved.", status=201)
@@ -158,12 +179,16 @@ class ResultDetailView(APIView):
         except Result.DoesNotExist:
             return api_error("Result not found.", status=404)
             
+        if obj.is_published and request.user.role != 'admin':
+            return api_error("Published results cannot be edited by teachers. Only administrators can edit published results.", status=403)
+
         if 'marks_obtained' in data:
             obj.marks = data['marks_obtained']
         if 'remarks' in data:
             obj.remarks = data['remarks']
         obj.save()
         return api_success(data=ResultSerializer(obj).data, message="Result updated.")
+
 
 
 class ResultByExamView(APIView):

@@ -1,0 +1,125 @@
+\newpage
+\section{LITERATURE SURVEY}
+\hline
+
+This chapter provides a comprehensive review of existing college management systems, related technologies, and prior research in the domain of educational technology. The purpose of this survey is to understand the current landscape, identify the strengths and weaknesses of existing solutions, and justify the need for EduConnect.
+
+\subsection{Overview of Existing Systems}
+
+\subsubsection{Google Classroom}
+Google Classroom is a widely adopted, free platform developed by Google for educational institutions. It integrates with Google Workspace tools (Docs, Drive, Calendar) and provides features such as assignment distribution, grading, and communication. However, Google Classroom is primarily designed for course-level interaction and \textbf{lacks comprehensive administrative features} such as attendance tracking, examination management, timetable scheduling, and library management. It does not support institutional code-based registration or role-based user approval workflows.
+
+\subsubsection{Moodle}
+Moodle is an open-source Learning Management System (LMS) used by thousands of institutions globally. It provides a rich set of features including course management, quizzes, forums, and grade books. While Moodle is highly customizable through plugins, its interface is often criticized for being \textbf{dated and complex}. Setting up and maintaining a Moodle instance requires significant technical expertise. Additionally, Moodle does not natively support features such as QR-based attendance, library management, or AI-powered summarization.
+
+\subsubsection{Edmodo}
+Edmodo is a social learning platform designed for K-12 and higher education. It provides features such as class groups, assignments, quizzes, and communication. Edmodo focuses heavily on the social and collaborative aspects of learning but \textbf{lacks robust administrative tools} for attendance management, result processing, timetable building, and audit logging.
+
+\subsubsection{ERP Systems (SAP, Oracle)}
+Enterprise Resource Planning (ERP) systems like SAP Student Lifecycle Management and Oracle PeopleSoft Campus Solutions offer comprehensive institutional management capabilities. However, these systems are \textbf{prohibitively expensive} for small to medium-sized institutions, require extensive customization, and have steep learning curves. They are often over-engineered for the needs of a typical college.
+
+\subsubsection{Custom In-House Solutions}
+Many institutions develop custom management systems using older technologies such as PHP with MySQL, or desktop applications built on Visual Basic or Java Swing. These solutions, while tailored to specific needs, often suffer from \textbf{poor maintainability, lack of responsive design, absence of API-based architecture}, and limited scalability. They also typically lack modern UI/UX design practices.
+
+\subsection{Technology Review}
+
+\subsubsection{React.js and Modern Frontend Frameworks}
+React.js, developed and maintained by Meta (Facebook), has become the most popular JavaScript library for building user interfaces. React's component-based architecture, virtual DOM for efficient rendering, and vast ecosystem of libraries make it an ideal choice for building complex, interactive single-page applications (SPAs). React~19, the latest major version, introduces features such as improved concurrent rendering, server components, and automatic batching of state updates, which enhance both performance and developer experience.
+
+Material UI (MUI) v5 is a comprehensive React component library that implements Google's Material Design guidelines. It provides pre-built, accessible, and customizable components such as buttons, cards, data grids, date pickers, and navigation elements. MUI v5 introduces the Emotion styling engine, theme customization with design tokens, and support for dark/light mode theming.
+
+\subsubsection{Django and Django REST Framework}
+Django is a high-level Python web framework that follows the Model--View--Template (MVT) architectural pattern. It emphasizes rapid development, clean design, and the principle of ``Don't Repeat Yourself'' (DRY). Django includes an Object-Relational Mapper (ORM) that allows developers to interact with the database using Python objects rather than raw SQL, a powerful admin interface, built-in authentication, and a robust migration system for database schema evolution.
+
+Django REST Framework (DRF) is a toolkit for building Web APIs on top of Django. It provides serialization, authentication (including JWT), permission classes, viewsets, routers, and pagination---all essential components for building RESTful APIs. DRF's class-based views and generic API views significantly reduce boilerplate code while maintaining flexibility.
+
+\subsubsection{JWT-Based Authentication}
+JSON Web Tokens (JWT) have become the de facto standard for stateless authentication in modern web applications. A JWT consists of three parts: a header, a payload, and a signature. The token is self-contained, meaning that it carries all the necessary information to authenticate a user without requiring a server-side session store. The \texttt{djangorestframework-simplejwt} library provides a robust implementation of JWT for Django, supporting access tokens, refresh tokens, token blacklisting, and custom claims.
+
+\subsubsection{Capacitor for Cross-Platform Development}
+Capacitor, developed by Ionic, is a cross-platform runtime that enables web applications to run natively on iOS, Android, and the web. Unlike Cordova, Capacitor is designed to work seamlessly with modern web development tools and frameworks. It provides a set of native plugins for accessing device capabilities such as the camera, filesystem, local notifications, and sharing. By using Capacitor, a React-based web application can be packaged as a native Android APK with minimal additional code.
+
+\subsubsection{AI in Education}
+The integration of artificial intelligence in educational technology has been a growing trend. Tools leveraging large language models (LLMs) such as Google's Gemini, OpenAI's GPT-4, and Anthropic's Claude can assist in content summarization, question generation, automated grading, and personalized learning. In the context of EduConnect, AI is used to generate lecture summaries from transcripts, providing teachers with a time-saving tool for content review and study material preparation.
+
+\subsection{Comparison of Existing Systems}
+
+Table~\ref{tab:comparison} presents a comparative analysis of EduConnect against existing platforms across key feature categories.
+
+\begin{table}[H]
+\centering
+\caption{Comparison of EduConnect with Existing Systems}
+\label{tab:comparison}
+\footnotesize
+\begin{tabular}{|p{3cm}|c|c|c|c|c|}
+\hline
+\textbf{Feature} & \textbf{Google Classroom} & \textbf{Moodle} & \textbf{Edmodo} & \textbf{ERP} & \textbf{EduConnect} \\
+\hline
+Role-Based Access & Partial & Yes & Partial & Yes & \textbf{Yes} \\
+\hline
+JWT Authentication & No & No & No & Varies & \textbf{Yes} \\
+\hline
+QR Attendance & No & Plugin & No & Plugin & \textbf{Yes} \\
+\hline
+Exam Management & No & Yes & Partial & Yes & \textbf{Yes} \\
+\hline
+Auto Grading & No & Yes & Partial & Yes & \textbf{Yes} \\
+\hline
+Library Mgmt. & No & No & No & Yes & \textbf{Yes} \\
+\hline
+Timetable Builder & No & Plugin & No & Yes & \textbf{Yes} \\
+\hline
+AI Summarization & No & No & No & No & \textbf{Yes} \\
+\hline
+Mobile APK & App & Plugin & App & Varies & \textbf{Yes} \\
+\hline
+Open Source & No & Yes & No & No & \textbf{Yes} \\
+\hline
+Modern UI/UX & Good & Poor & Good & Varies & \textbf{Excellent} \\
+\hline
+Dark Mode & No & Plugin & No & No & \textbf{Yes} \\
+\hline
+Audit Logging & Partial & Yes & No & Yes & \textbf{Yes} \\
+\hline
+Cost & Free & Free & Freemium & High & \textbf{Free} \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Gaps Identified in Existing Systems}
+
+Based on the literature review and comparative analysis, the following gaps were identified in existing systems:
+
+\begin{enumerate}[label=\arabic*., leftmargin=2em]
+    \item \textbf{Lack of Integration:} Most existing systems focus on either learning management (Google Classroom, Moodle) or institutional administration (ERP systems), but none provide a truly integrated platform that covers both academic and administrative functions in a single application.
+    
+    \item \textbf{Absence of AI-Powered Tools:} None of the surveyed platforms offer built-in AI capabilities for lecture summarization or content analysis, despite the growing availability and capability of large language models.
+    
+    \item \textbf{Poor Modern UI/UX:} Open-source systems like Moodle suffer from outdated interfaces that do not meet the expectations of today's users who are accustomed to modern, visually appealing applications.
+    
+    \item \textbf{No QR-Based Attendance:} Native support for QR-code based attendance marking is absent in most mainstream platforms, requiring third-party plugins or custom development.
+    
+    \item \textbf{Limited Cross-Platform Support:} While some systems offer mobile apps, they are often feature-limited or require separate development efforts. A unified codebase that works across web and mobile is rare.
+    
+    \item \textbf{No Library Management:} Learning management systems typically do not include library management capabilities, requiring institutions to use separate software for this function.
+    
+    \item \textbf{High Cost for Comprehensive Solutions:} ERP systems that do offer comprehensive features are prohibitively expensive for small to medium-sized educational institutions.
+    
+    \item \textbf{No Session-Aware Authentication:} Existing JWT implementations rarely include session-level controls that prevent concurrent logins from multiple devices---a feature important for maintaining examination integrity.
+\end{enumerate}
+
+\subsection{Motivation for EduConnect}
+
+The gaps identified in the literature survey clearly demonstrate the need for a comprehensive, affordable, modern, and integrated college management system. EduConnect aims to fill these gaps by:
+
+\begin{itemize}[leftmargin=2em]
+    \item Providing a \textbf{single, unified platform} that integrates academic management (attendance, exams, results) with administrative functions (user management, departments, library) and communication tools (announcements, calendar, feedback).
+    
+    \item Leveraging \textbf{modern web technologies} (React~19, Django~5, MUI~v5) to deliver a premium, responsive, and visually appealing user experience with dark/light theme support and micro-animations.
+    
+    \item Integrating \textbf{AI capabilities} for lecture summarization to assist teachers in their academic workflows.
+    
+    \item Supporting \textbf{cross-platform deployment} through Capacitor, enabling the same codebase to run as a web application and a native Android APK.
+    
+    \item Being \textbf{open-source and free}, making it accessible to institutions of all sizes and budgets.
+\end{itemize}

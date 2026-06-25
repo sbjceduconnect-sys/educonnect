@@ -313,7 +313,7 @@ export default function ResultEntryPage() {
                             placeholder="Enter marks"
                             value={studentMarks.marksObtained}
                             onChange={(e) => handleMarksChange(student.id, e.target.value)}
-                            disabled={isPublished}
+                            disabled={isPublished && user?.role !== 'admin'}
                             InputProps={{ inputProps: { min: 0, max: selectedExam?.maxMarks } }}
                             sx={{ width: 130, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                           />
@@ -332,7 +332,7 @@ export default function ResultEntryPage() {
                             placeholder={gradeInfo.remark || 'Add comments'}
                             value={studentMarks.remarks}
                             onChange={(e) => handleRemarksChange(student.id, e.target.value)}
-                            disabled={isPublished}
+                            disabled={isPublished && user?.role !== 'admin'}
                             sx={{ width: '100%', maxWidth: 300, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                           />
                         </TableCell>
@@ -346,8 +346,13 @@ export default function ResultEntryPage() {
 
           <Divider />
 
-          <Box sx={{ p: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-            {!isPublished && (
+          <Box sx={{ p: 3, display: 'flex', justifyContent: 'flex-end', gap: 2, alignItems: 'center' }}>
+            {isPublished && user?.role === 'admin' && (
+              <Typography variant="body2" color="warning.main" sx={{ display: 'flex', alignItems: 'center', fontWeight: 600, mr: 'auto' }}>
+                ⚠️ Notice: Results are published. You are editing live grades.
+              </Typography>
+            )}
+            {(!isPublished || user?.role === 'admin') && (
               <Button
                 variant="outlined"
                 onClick={handleSaveResults}
@@ -355,7 +360,7 @@ export default function ResultEntryPage() {
                 startIcon={<Save />}
                 sx={{ borderRadius: '10px', px: 3 }}
               >
-                Save Draft Marks
+                {isPublished ? 'Save Published Changes' : 'Save Draft Marks'}
               </Button>
             )}
             <Button

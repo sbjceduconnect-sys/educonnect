@@ -1,0 +1,415 @@
+\newpage
+\appendix
+\section*{APPENDICES}
+\addcontentsline{toc}{section}{APPENDICES}
+\hline
+
+\subsection*{Appendix A: Complete API Endpoint Reference}
+\addcontentsline{toc}{subsection}{Appendix A: API Endpoint Reference}
+
+The following table provides the complete list of all REST API endpoints exposed by the EduConnect backend.
+
+\begin{longtable}{|l|p{5cm}|p{5.5cm}|}
+\caption{Complete API Endpoint Reference} \label{tab:api_full} \\
+\hline
+\textbf{Method} & \textbf{Endpoint} & \textbf{Description} \\
+\hline
+\endfirsthead
+\multicolumn{3}{c}{\tablename\ \thetable\ --- \textit{Continued from previous page}} \\
+\hline
+\textbf{Method} & \textbf{Endpoint} & \textbf{Description} \\
+\hline
+\endhead
+\hline
+\multicolumn{3}{r}{\textit{Continued on next page}} \\
+\endfoot
+\hline
+\endlastfoot
+
+\multicolumn{3}{|l|}{\textbf{Authentication}} \\
+\hline
+POST & /api/v1/auth/register & Register new user \\
+\hline
+POST & /api/v1/auth/login & Login and get tokens \\
+\hline
+POST & /api/v1/auth/refresh & Refresh access token \\
+\hline
+POST & /api/v1/auth/logout & Logout (clear session) \\
+\hline
+POST & /api/v1/auth/forgot-password & Request password reset code \\
+\hline
+POST & /api/v1/auth/reset-password & Reset password with code \\
+\hline
+PATCH & /api/v1/auth/change-password & Change current password \\
+\hline
+GET & /api/v1/users/me & Get current user profile \\
+\hline
+
+\multicolumn{3}{|l|}{\textbf{User Management}} \\
+\hline
+GET & /api/v1/users & List all users (admin) \\
+\hline
+GET & /api/v1/users/\{id\} & Get user by ID \\
+\hline
+PUT/PATCH & /api/v1/users/\{id\} & Update user \\
+\hline
+DELETE & /api/v1/users/\{id\} & Delete user (admin) \\
+\hline
+PATCH & /api/v1/users/\{id\}/approve & Approve user (admin) \\
+\hline
+PATCH & /api/v1/users/\{id\}/role & Change user role (admin) \\
+\hline
+POST & /api/v1/users/bulk-import & Bulk import from CSV/Excel \\
+\hline
+POST & /api/v1/users/bulk-delete & Bulk delete students (admin) \\
+\hline
+
+\multicolumn{3}{|l|}{\textbf{Dashboards}} \\
+\hline
+GET & /api/v1/dashboard/admin & Admin dashboard data \\
+\hline
+GET & /api/v1/dashboard/teacher & Teacher dashboard data \\
+\hline
+GET & /api/v1/dashboard/student & Student dashboard data \\
+\hline
+
+\multicolumn{3}{|l|}{\textbf{Departments}} \\
+\hline
+GET/POST & /api/v1/departments & List/Create departments \\
+\hline
+GET/PUT/DELETE & /api/v1/departments/\{id\} & CRUD on department \\
+\hline
+PATCH & /api/v1/departments/\{id\}/hod & Assign Head of Department \\
+\hline
+
+\multicolumn{3}{|l|}{\textbf{Courses}} \\
+\hline
+GET/POST & /api/v1/courses & List/Create courses \\
+\hline
+GET/PUT/DELETE & /api/v1/courses/\{id\} & CRUD on course \\
+\hline
+POST & /api/v1/courses/\{id\}/enroll & Enroll students \\
+\hline
+DELETE & /api/v1/courses/\{id\}/enroll/\{sid\} & Remove student enrollment \\
+\hline
+GET & /api/v1/courses/\{id\}/students & Get enrolled students \\
+\hline
+
+\multicolumn{3}{|l|}{\textbf{Subjects}} \\
+\hline
+GET/POST & /api/v1/subjects & List/Create subjects \\
+\hline
+GET/PUT/DELETE & /api/v1/subjects/\{id\} & CRUD on subject \\
+\hline
+
+\multicolumn{3}{|l|}{\textbf{Attendance}} \\
+\hline
+GET/POST & /api/v1/attendance & List/Mark attendance \\
+\hline
+PUT & /api/v1/attendance/\{id\} & Update attendance record \\
+\hline
+DELETE & /api/v1/attendance/\{id\} & Delete attendance record \\
+\hline
+POST & /api/v1/attendance/qr/generate & Generate QR code \\
+\hline
+POST & /api/v1/attendance/qr/scan & Scan QR for attendance \\
+\hline
+GET & /api/v1/attendance/subject/\{id\} & Attendance by subject \\
+\hline
+GET & /api/v1/attendance/student/\{id\} & Student's attendance \\
+\hline
+GET & /api/v1/attendance/student/\{id\}/summary & Attendance summary \\
+\hline
+GET & /api/v1/attendance/reports & Attendance reports \\
+\hline
+GET/POST & /api/v1/attendance/edit-requests & Edit requests CRUD \\
+\hline
+PATCH & /api/v1/attendance/edit-requests/\{id\}/action & Approve/Reject \\
+\hline
+
+\multicolumn{3}{|l|}{\textbf{Examinations}} \\
+\hline
+GET/POST & /api/v1/exams & List/Create exams \\
+\hline
+GET/PUT/DELETE & /api/v1/exams/\{id\} & CRUD on exam \\
+\hline
+
+\multicolumn{3}{|l|}{\textbf{Results}} \\
+\hline
+POST & /api/v1/results & Submit results \\
+\hline
+GET & /api/v1/results/exam/\{id\} & Results by exam \\
+\hline
+GET & /api/v1/results/student/\{id\} & Results by student \\
+\hline
+GET & /api/v1/results/student/\{id\}/performance & Student performance \\
+\hline
+PATCH & /api/v1/results/\{id\} & Update result \\
+\hline
+PATCH & /api/v1/results/exam/\{id\}/publish & Publish exam results \\
+\hline
+GET & /api/v1/results/reports/progress/\{id\} & PDF progress report \\
+\hline
+
+\multicolumn{3}{|l|}{\textbf{Study Materials}} \\
+\hline
+GET/POST & /api/v1/materials & List/Upload materials \\
+\hline
+GET/PUT/DELETE & /api/v1/materials/\{id\} & CRUD on material \\
+\hline
+GET & /api/v1/materials/\{id\}/download & Download material file \\
+\hline
+GET & /api/v1/materials/question-papers & List question papers \\
+\hline
+
+\multicolumn{3}{|l|}{\textbf{Announcements, Calendar, Feedback}} \\
+\hline
+GET/POST & /api/v1/announcements & List/Create announcements \\
+\hline
+GET/PUT/DELETE & /api/v1/announcements/\{id\} & CRUD on announcement \\
+\hline
+GET/POST & /api/v1/calendar & List/Create events \\
+\hline
+GET/PUT/DELETE & /api/v1/calendar/\{id\} & CRUD on event \\
+\hline
+POST & /api/v1/feedback & Submit feedback \\
+\hline
+GET & /api/v1/feedback & List feedback \\
+\hline
+GET & /api/v1/feedback/summary & Feedback summary \\
+\hline
+
+\multicolumn{3}{|l|}{\textbf{Library, Timetable, Lesson Plans}} \\
+\hline
+GET/POST & /api/v1/library/books & List/Create books \\
+\hline
+PUT/DELETE & /api/v1/library/books/\{id\} & Update/Delete book \\
+\hline
+POST & /api/v1/library/issue & Issue a book \\
+\hline
+POST & /api/v1/library/return/\{id\} & Return a book \\
+\hline
+GET & /api/v1/library/transactions & List transactions \\
+\hline
+GET & /api/v1/library/my-books & Student's borrowed books \\
+\hline
+GET/POST & /api/v1/timetables & List/Create timetables \\
+\hline
+GET/PUT/DELETE & /api/v1/timetables/\{id\} & CRUD on timetable \\
+\hline
+GET/POST & /api/v1/lesson-plans & List/Create lesson plans \\
+\hline
+GET/PUT/DELETE & /api/v1/lesson-plans/\{id\} & CRUD on lesson plan \\
+\hline
+
+\multicolumn{3}{|l|}{\textbf{Office Hours, AI, Audit}} \\
+\hline
+GET/POST & /api/v1/office-hours & List/Create office hours \\
+\hline
+PUT/DELETE & /api/v1/office-hours/\{id\} & Update/Delete \\
+\hline
+POST & /api/v1/office-hours/\{id\}/book & Book a slot \\
+\hline
+POST & /api/v1/ai/lecture-summary & AI text summary \\
+\hline
+POST & /api/v1/ai/lecture-summary/file & AI file summary \\
+\hline
+GET & /api/v1/audit-logs & List audit logs \\
+\hline
+DELETE & /api/v1/audit-logs & Clear all audit logs \\
+\hline
+\end{longtable}
+
+\newpage
+\subsection*{Appendix B: Environment Configuration}
+\addcontentsline{toc}{subsection}{Appendix B: Environment Configuration}
+
+The following environment variables are used to configure the EduConnect backend:
+
+\begin{table}[H]
+\centering
+\caption{Backend Environment Variables}
+\label{tab:env_vars}
+\footnotesize
+\begin{tabular}{|p{4.5cm}|p{3.5cm}|p{5.5cm}|}
+\hline
+\textbf{Variable} & \textbf{Default Value} & \textbf{Description} \\
+\hline
+SECRET\_KEY & (insecure fallback) & Django secret key for cryptographic signing \\
+\hline
+DEBUG & True & Enable/disable debug mode \\
+\hline
+ALLOWED\_HOSTS & localhost,127.0.0.1 & Comma-separated list of allowed hostnames \\
+\hline
+USE\_SQLITE & False & Use SQLite instead of PostgreSQL \\
+\hline
+DB\_NAME & educonnect\_db & PostgreSQL database name \\
+\hline
+DB\_USER & educonnect\_user & PostgreSQL username \\
+\hline
+DB\_PASSWORD & (empty) & PostgreSQL password \\
+\hline
+DB\_HOST & localhost & PostgreSQL host \\
+\hline
+DB\_PORT & 5432 & PostgreSQL port \\
+\hline
+CORS\_ORIGIN & http://localhost:5173 & Frontend origin for CORS \\
+\hline
+JWT\_ACCESS\_TOKEN\_LIFETIME\_MINUTES & 60 & Access token lifetime in minutes \\
+\hline
+JWT\_REFRESH\_TOKEN\_LIFETIME\_DAYS & 7 & Refresh token lifetime in days \\
+\hline
+ADMIN\_CODE & SBJC-ADMIN-2026 & Institutional code for admin registration \\
+\hline
+TEACHER\_CODE & SBJC-TEACH-2026 & Institutional code for teacher registration \\
+\hline
+BULK\_DELETE\_SECURITY\_CODE & SBJC-DELETE-CONFIRM-2026 & Security code for bulk user deletion \\
+\hline
+EMAIL\_HOST & smtp.gmail.com & SMTP server hostname \\
+\hline
+EMAIL\_PORT & 587 & SMTP server port \\
+\hline
+EMAIL\_HOST\_USER & (empty) & SMTP username/email \\
+\hline
+EMAIL\_HOST\_PASSWORD & (empty) & SMTP password \\
+\hline
+GEMINI\_API\_KEY & (not set) & Google Gemini API key for AI features \\
+\hline
+\end{tabular}
+\end{table}
+
+\newpage
+\subsection*{Appendix C: Installation and Setup Guide}
+\addcontentsline{toc}{subsection}{Appendix C: Installation and Setup Guide}
+
+\subsubsection*{Prerequisites}
+\begin{itemize}[leftmargin=2em]
+    \item Node.js $\geq$ 18
+    \item Python $\geq$ 3.11
+    \item Git
+\end{itemize}
+
+\subsubsection*{Backend Setup}
+\begin{lstlisting}[language=bash, caption={Backend Setup Commands}]
+# 1. Activate virtual environment
+.\venv\Scripts\activate          # Windows
+source venv/bin/activate         # Linux/Mac
+
+# 2. Configure environment
+cp educonnect-backend/.env.example educonnect-backend/.env
+# Edit .env with your settings
+
+# 3. Install dependencies
+cd educonnect-backend
+pip install -r requirements.txt
+
+# 4. Run database migrations
+python manage.py makemigrations
+python manage.py migrate
+
+# 5. Create admin superuser
+python manage.py createsuperuser
+
+# 6. Start development server
+python manage.py runserver
+# Server starts at http://localhost:8000
+\end{lstlisting}
+
+\subsubsection*{Frontend Setup}
+\begin{lstlisting}[language=bash, caption={Frontend Setup Commands}]
+# 1. Navigate to frontend directory
+cd educonnect-client
+
+# 2. Install dependencies
+npm install
+
+# 3. Configure environment
+# Create .env with VITE_API_URL
+
+# 4. Start development server
+npm run dev
+# Server starts at http://localhost:5173
+
+# 5. Build for production
+npm run build
+\end{lstlisting}
+
+\subsubsection*{Android APK Build}
+\begin{lstlisting}[language=bash, caption={Android Build Commands}]
+# 1. Build production frontend
+npm run build
+
+# 2. Copy to Android project
+npx cap copy android
+
+# 3. Open in Android Studio
+npx cap open android
+
+# 4. Build signed APK in Android Studio
+# Build > Generate Signed Bundle/APK
+\end{lstlisting}
+
+\newpage
+\subsection*{Appendix D: Project Directory Structure}
+\addcontentsline{toc}{subsection}{Appendix D: Project Directory Structure}
+
+\begin{lstlisting}[caption={Complete Project Directory Structure}, basicstyle=\ttfamily\scriptsize]
+Educonnect_Final/
+|-- educonnect-backend/          # Django 5 Backend
+|   |-- educonnect/              # Django project config
+|   |   |-- settings.py          # Settings (DB, JWT, CORS)
+|   |   |-- urls.py              # Master URL routing
+|   |   |-- wsgi.py              # WSGI entry point
+|   |-- core/                    # Shared utilities
+|   |   |-- authentication.py    # Session-aware JWT
+|   |   |-- permissions.py       # RBAC classes
+|   |   |-- response.py          # Standardized responses
+|   |   |-- exceptions.py        # Custom exception handler
+|   |   |-- pagination.py        # Standard pagination
+|   |   |-- serializers.py       # CamelCase serializer
+|   |-- apps/                    # Django applications
+|   |   |-- accounts/            # Users, auth, profiles
+|   |   |-- departments/         # Department management
+|   |   |-- courses/             # Course management
+|   |   |-- subjects/            # Subject management
+|   |   |-- attendance/          # Attendance + QR
+|   |   |-- exams/               # Exam + Results
+|   |   |-- study_materials/     # File uploads
+|   |   |-- announcements/       # Announcements
+|   |   |-- calendar_events/     # Academic calendar
+|   |   |-- feedback/            # Feedback system
+|   |   |-- office_hours/        # Office hours booking
+|   |   |-- timetables/          # Timetable builder
+|   |   |-- lesson_plans/        # Lesson planning
+|   |   |-- library/             # Library management
+|   |   |-- ai_summary/          # AI summarization
+|   |   |-- audit_logs/          # Audit logging
+|   |-- requirements.txt         # Python dependencies
+|   |-- manage.py                # Django CLI
+|-- educonnect-client/           # React 19 Frontend
+|   |-- src/
+|   |   |-- api/                 # Axios instance + services
+|   |   |-- components/          # Reusable components
+|   |   |   |-- layout/          # Sidebar, Topbar, Layout
+|   |   |-- contexts/            # Auth, Theme, Notification
+|   |   |-- hooks/               # Custom React hooks
+|   |   |-- pages/               # All page components
+|   |   |   |-- admin/           # Admin-only pages
+|   |   |   |-- teacher/         # Teacher pages
+|   |   |   |-- student/         # Student pages
+|   |   |   |-- common/          # Shared pages
+|   |   |   |-- auth/            # Login, Register
+|   |   |   |-- dashboard/       # Role-based dashboards
+|   |   |   |-- profile/         # Profile page
+|   |   |-- styles/              # Theme + global CSS
+|   |   |-- utils/               # Helpers + constants
+|   |   |-- App.jsx              # Main app + routing
+|   |   |-- main.jsx             # React entry point
+|   |-- capacitor.config.ts      # Capacitor config
+|   |-- package.json             # Node dependencies
+|   |-- vite.config.js           # Vite build config
+|-- EduConnect.apk               # Android APK (9.3 MB)
+|-- Report/                      # LaTeX project report
+|-- docs/                        # User guides
+|-- README.md                    # Project documentation
+\end{lstlisting}

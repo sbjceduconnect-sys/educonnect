@@ -1,0 +1,356 @@
+\newpage
+\section{IMPLEMENTATION}
+\hline
+
+This chapter details the implementation of each major module in EduConnect, including code structure, key algorithms, and design decisions.
+
+\subsection{Backend Implementation}
+
+\subsubsection{Project Structure}
+
+The Django backend is organized into a main project package (\texttt{educonnect/}) containing settings, URL configuration, and WSGI/ASGI entry points, a \texttt{core/} package with shared utilities, and an \texttt{apps/} package containing 16 Django applications. Each application follows the standard Django convention with \texttt{models.py}, \texttt{views.py}, \texttt{serializers.py}, \texttt{urls.py}, and \texttt{migrations/}.
+
+\subsubsection{Core Utilities}
+
+The \texttt{core/} package provides reusable components used across all applications:
+
+\textbf{Standardized API Response:} All API endpoints use the \texttt{api\_success()} and \texttt{api\_error()} helper functions to ensure consistent response formatting:
+
+\begin{lstlisting}[language=Python, caption={Standardized Response Functions (core/response.py)}]
+def api_success(data=None, message="Operation successful", 
+                status=200, **kwargs):
+    return Response({
+        "success": True,
+        "message": message,
+        "data": data,
+    }, status=status, **kwargs)
+
+def api_error(message="Something went wrong", errors=None, 
+              status=400, **kwargs):
+    payload = {
+        "success": False,
+        "message": message,
+    }
+    if errors:
+        payload["errors"] = errors
+    return Response(payload, status=status, **kwargs)
+\end{lstlisting}
+
+\textbf{Custom Permission Classes:} Five permission classes enforce role-based access:
+
+\begin{lstlisting}[language=Python, caption={Permission Classes (core/permissions.py)}]
+class IsAdmin(BasePermission):
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated 
+                    and request.user.is_approved 
+                    and request.user.role == 'admin')
+
+class IsTeacher(BasePermission):
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated 
+                    and request.user.is_approved 
+                    and request.user.role == 'teacher')
+
+class IsStudent(BasePermission):
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated 
+                    and request.user.is_approved 
+                    and request.user.role == 'student')
+
+class IsAdminOrTeacher(BasePermission):
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated 
+                    and request.user.is_approved
+                    and request.user.role in ('admin', 'teacher'))
+\end{lstlisting}
+
+\textbf{Session-Aware JWT Authentication:} A custom JWT authentication class validates student session IDs:
+
+\begin{lstlisting}[language=Python, caption={Session-Aware JWT (core/authentication.py)}]
+class StudentSessionJWTAuthentication(JWTAuthentication):
+    def get_user(self, validated_token):
+        user = super().get_user(validated_token)
+        if user and user.role == 'student':
+            token_session_id = validated_token.get(
+                'current_session_id')
+            if (not token_session_id or 
+                token_session_id != user.current_session_id):
+                raise AuthenticationFailed(
+                    "Your session has expired or you have "
+                    "logged in from another device.",
+                    code="session_expired"
+                )
+        return user
+\end{lstlisting}
+
+\subsubsection{User Management Module}
+
+The accounts application handles user registration, authentication, profile management, and administrative operations. Key features include:
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Institutional Code Validation:} During registration, admin and teacher roles require valid institutional codes (configured via environment variables). Student registrations do not require institutional codes but do require admin approval.
+    
+    \item \textbf{Session Token Generation:} For student logins, a unique UUID-based session ID is generated and stored both in the database and the JWT payload, enabling single-device enforcement.
+    
+    \item \textbf{Bulk User Import:} Administrators can import users from CSV or Excel files. The import handler parses the file, validates fields, creates user accounts with default passwords, and sets up profiles.
+    
+    \item \textbf{Bulk User Deletion:} Administrators can delete students by class filter (11th, 12th, or all) with a security code verification step to prevent accidental deletions.
+    
+    \item \textbf{Dashboard Data Aggregation:} Three dashboard views (Admin, Teacher, Student) aggregate relevant statistics using Django ORM queries.
+\end{itemize}
+
+\begin{lstlisting}[language=Python, caption={Token Generation with Session Control}]
+def _get_tokens(user):
+    import uuid
+    refresh = RefreshToken.for_user(user)
+    if user.role == 'student':
+        session_id = uuid.uuid4().hex
+        user.current_session_id = session_id
+        user.save(update_fields=['current_session_id', 
+                                 'updated_at'])
+        refresh['current_session_id'] = session_id
+        refresh.access_token['current_session_id'] = session_id
+    return str(refresh.access_token), str(refresh)
+\end{lstlisting}
+
+\subsubsection{Attendance Module}
+
+The attendance module supports two marking methods:
+
+\textbf{Manual Attendance:} Teachers select a course, subject, and date, then mark each student as Present, Absent, Late, or Excused. Batch submission creates multiple \texttt{AttendanceRecord} entries in a single request.
+
+\textbf{QR-Code Attendance:} Teachers generate a time-limited QR code containing a 6-character token. Students scan the QR code within the validity window, and the backend verifies the token, checks the student's enrollment in the course, and creates an attendance record. The \texttt{ActiveQRCode} model stores the token with an expiry timestamp.
+
+\textbf{Edit Requests:} Students can request attendance corrections by submitting an \texttt{AttendanceEditRequest} with a reason. Teachers can approve or reject these requests, and upon approval, the original attendance record is updated.
+
+\subsubsection{Examination and Results Module}
+
+The exams module manages examination scheduling and result processing:
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Exam Types:} Theory, Practical, Viva, Mid-term, Final, Quiz, and Assignment.
+    \item \textbf{Auto-Grade Computation:} The \texttt{Result.save()} method automatically computes grades based on the percentage of marks obtained relative to max marks.
+    \item \textbf{Bulk Result Entry:} Teachers can submit results for multiple students in a single API call.
+    \item \textbf{Result Publishing:} Results have a \texttt{is\_published} flag; unpublished results are visible only to teachers and admins.
+    \item \textbf{PDF Progress Reports:} The system can generate downloadable PDF progress reports for individual students using the ReportLab library.
+\end{itemize}
+
+\begin{lstlisting}[language=Python, caption={Auto-Grade Computation in Result Model}]
+class Result(models.Model):
+    student = models.ForeignKey('accounts.User', ...)
+    exam = models.ForeignKey(Exam, ...)
+    marks = models.FloatField(default=0)
+    grade = models.CharField(max_length=5, blank=True)
+    is_published = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        pct = (self.marks / self.exam.max_marks * 100) \
+              if self.exam.max_marks else 0
+        self.grade = ('A+' if pct >= 90 else 
+                      'A'  if pct >= 80 else 
+                      'B+' if pct >= 75 else 
+                      'B'  if pct >= 70 else 
+                      'C'  if pct >= 60 else 
+                      'D'  if pct >= 50 else 'F')
+        super().save(*args, **kwargs)
+\end{lstlisting}
+
+\subsubsection{Library Management Module}
+
+The library module manages two models:
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Book:} Stores inventory information including title, author, ISBN (unique), category, publisher, shelf location, total copies, and available copies.
+    \item \textbf{BookTransaction:} Tracks issue/return operations with status (issued, returned, overdue), due dates, return dates, and fines.
+\end{itemize}
+
+When a book is issued, the available copies count is decremented. When returned, it is incremented. Overdue detection is handled by comparing the due date with the current date.
+
+\subsubsection{AI Summarization Module}
+
+The AI module provides two endpoints: text-based summarization and file-based summarization. The implementation follows a dual-mode approach:
+
+\begin{enumerate}[label=\arabic*., leftmargin=2em]
+    \item \textbf{Gemini API Mode:} If a Google Gemini API key is configured, the text is sent to the Gemini 2.5 Flash model with format-specific prompt templates (detailed, checklist, or bullet-points). The API response is returned directly to the client.
+    
+    \item \textbf{Heuristic Fallback Mode:} If no API key is available, a local natural language processing engine performs extractive summarization:
+    \begin{itemize}
+        \item Text is tokenized and cleaned (stop words removed).
+        \item Word frequencies are computed and normalized.
+        \item Sentences are scored based on the sum of word weights, normalized by sentence length.
+        \item Top-scoring sentences are selected and formatted according to the requested output format.
+    \end{itemize}
+\end{enumerate}
+
+\begin{lstlisting}[language=Python, caption={Heuristic Summarization Algorithm (Excerpt)}]
+def heuristic_summarize(text, format_type='bullet-points'):
+    sentences = extract_sentences(text)
+    words = clean_and_tokenize(text)
+    word_freq = Counter(words)
+    max_freq = max(word_freq.values()) if word_freq else 1
+    word_weights = {w: freq/max_freq for w, freq 
+                    in word_freq.items()}
+    sentence_scores = []
+    for s in sentences:
+        s_words = clean_and_tokenize(s)
+        score = sum(word_weights.get(w, 0) for w in s_words)
+        if len(s_words) > 0:
+            score = score / (len(s_words) ** 0.5)
+        sentence_scores.append((s, score))
+    sentence_scores.sort(key=lambda x: x[1], reverse=True)
+    # Select top sentences and format output
+    ...
+\end{lstlisting}
+
+\subsubsection{Audit Logging Module}
+
+The audit logging system uses a custom Django middleware (\texttt{AuditLogMiddleware}) that intercepts all API requests and logs significant actions (POST, PUT, PATCH, DELETE) to the \texttt{AuditLog} model. Each log entry records:
+
+\begin{itemize}[leftmargin=2em]
+    \item The authenticated user who performed the action
+    \item The HTTP method and endpoint
+    \item A human-readable action description
+    \item The target entity
+    \item The client's IP address
+    \item A timestamp
+\end{itemize}
+
+This provides administrators with a complete trail of all modifications made within the system.
+
+\subsection{Frontend Implementation}
+
+\subsubsection{Application Bootstrap}
+
+The main \texttt{App.jsx} component establishes the application's provider hierarchy:
+
+\begin{lstlisting}[language=Java, caption={Application Provider Hierarchy (App.jsx)}]
+<QueryClientProvider client={queryClient}>
+  <ThemeProvider>
+    <AuthProvider>
+      <NotificationProvider>
+        <RouterComponent>
+          <AppBootstrap />
+          <Suspense fallback={<LoadingScreen />}>
+            <Routes>
+              {/* Public routes */}
+              {/* Protected routes with DashboardLayout */}
+            </Routes>
+          </Suspense>
+        </RouterComponent>
+      </NotificationProvider>
+    </AuthProvider>
+  </ThemeProvider>
+</QueryClientProvider>
+\end{lstlisting}
+
+\subsubsection{Theme and Design System}
+
+The application uses a custom MUI theme with design tokens for colors, typography, spacing, and component overrides. Key design decisions include:
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Color Palette:} Navy blue (\texttt{\#1B3F6B}) as primary, orange (\texttt{\#F07830}) as secondary, with semantic colors for success, warning, error, and info states.
+    \item \textbf{Dark Mode:} A deep navy (\texttt{\#0F1E33}) background with lighter paper (\texttt{\#14253D}) and light text colors.
+    \item \textbf{Typography:} Inter font family with carefully weighted headings (800 for h1 down to 600 for h6).
+    \item \textbf{Component Styling:} Custom border radius (12px default, 16px for cards), gradient buttons, hover elevation effects, and smooth transitions on all interactive elements.
+    \item \textbf{Custom Scrollbars:} Purple-themed scrollbar styling for a premium look.
+\end{itemize}
+
+\subsubsection{Axios Interceptor for Token Management}
+
+The Axios instance includes a response interceptor that automatically handles JWT token expiration:
+
+\begin{lstlisting}[language=Java, caption={Token Refresh Interceptor (axiosInstance.js)}]
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response?.status === 401 
+        && !originalRequest._retry) {
+      originalRequest._retry = true;
+      isRefreshing = true;
+      try {
+        const res = await axios.post(
+          `${API_URL}/auth/refresh`, {}, 
+          { withCredentials: true });
+        const newToken = res.data.data.accessToken;
+        window.dispatchEvent(new CustomEvent(
+          'tokenRefreshed', 
+          { detail: { accessToken: newToken } }));
+        originalRequest.headers['Authorization'] = 
+          `Bearer ${newToken}`;
+        return axiosInstance(originalRequest);
+      } catch (refreshError) {
+        window.dispatchEvent(
+          new CustomEvent('authExpired'));
+        return Promise.reject(refreshError);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+\end{lstlisting}
+
+\subsubsection{Role-Based Routing}
+
+The frontend implements dynamic role-based routing through wrapper components. Pages like Attendance, Results, and Exams render different components based on the user's role:
+
+\begin{lstlisting}[language=Java, caption={Role-Based Route Component}]
+function AttendanceRoute() {
+  const { user } = useAuth();
+  if (user?.role === 'student') 
+    return <StudentAttendancePage />;
+  if (user?.role === 'admin') 
+    return <AttendanceReportsPage />;
+  return <AttendanceMarkerPage />;
+}
+\end{lstlisting}
+
+Admin-only routes are wrapped in a \texttt{ProtectedRoute} component with a \texttt{roles} prop that checks the user's role before rendering.
+
+\subsubsection{Lazy Loading and Code Splitting}
+
+All page components are loaded lazily using React's \texttt{lazy()} and \texttt{Suspense}, which results in automatic code splitting by Vite. Each page becomes a separate JavaScript chunk that is loaded on demand, significantly reducing the initial bundle size and improving first-load performance.
+
+\subsubsection{Dashboard Implementations}
+
+Three distinct dashboards are implemented:
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Admin Dashboard:} Displays cards showing total students, teachers, admins, pending approvals, total courses, and enrolled students. Includes a list of recently registered users.
+    
+    \item \textbf{Teacher Dashboard:} Shows the teacher's assigned courses, total student count across courses, and recent announcements. Each course card displays the course title, code, and enrolled student count.
+    
+    \item \textbf{Student Dashboard:} Presents enrollment count, attendance statistics (percentage, attended, total classes), performance metrics (passed subjects, average percentage, overall grade), recent exam results with grades, enrolled courses, and latest announcements.
+\end{itemize}
+
+\subsection{Cross-Platform Deployment}
+
+EduConnect uses \textbf{Capacitor~8} to bridge the web application to native Android. The configuration is defined in \texttt{capacitor.config.ts}:
+
+\begin{lstlisting}[language=Java, caption={Capacitor Configuration}]
+const config: CapacitorConfig = {
+  appId: 'com.sbjc.educonnect',
+  appName: 'EduConnect',
+  webDir: 'dist',
+  server: {
+    androidScheme: 'https'
+  }
+};
+\end{lstlisting}
+
+The build process involves:
+\begin{enumerate}[label=\arabic*., leftmargin=2em]
+    \item Building the production React bundle with \texttt{npm run build}
+    \item Copying web assets to the native project with \texttt{npx cap copy}
+    \item Opening and building the Android project in Android Studio
+    \item Generating a signed APK for distribution
+\end{enumerate}
+
+Native capabilities accessed via Capacitor plugins include:
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Camera:} For capturing profile photos
+    \item \textbf{Filesystem:} For saving downloaded study materials
+    \item \textbf{Local Notifications:} For attendance reminders and announcements
+    \item \textbf{Share:} For sharing study materials
+    \item \textbf{File Opener:} For opening downloaded PDFs
+\end{itemize}

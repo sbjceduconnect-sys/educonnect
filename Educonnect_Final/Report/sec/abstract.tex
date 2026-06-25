@@ -1,0 +1,22 @@
+\newpage
+\begin{center}
+  \textbf{\large 
+  \bf{ABSTRACT}}  
+\end{center}
+\addcontentsline{toc}{section}{ABSTRACT}
+
+\hline
+\vspace{0.5cm}
+
+The rapid digitalization of educational institutions has necessitated the development of comprehensive, web-based management platforms that can streamline administrative, academic, and communication workflows. This project presents \textbf{EduConnect}, a full-stack college management system designed to address the multifaceted challenges faced by modern educational institutions in managing students, teachers, courses, attendance, examinations, and institutional resources.
+
+EduConnect is architected as a modern client-server application employing \textbf{React~19} with \textbf{Material~UI~v5} on the frontend and \textbf{Django~5} with \textbf{Django REST Framework (DRF)} on the backend. The system implements a robust \textbf{role-based access control (RBAC)} mechanism supporting three distinct user roles---Admin, Teacher, and Student---each with tailored dashboards, permissions, and feature sets. Authentication is handled through \textbf{JSON Web Tokens (JWT)} with session-aware validation, token rotation, and automatic refresh capabilities.
+
+The platform encompasses sixteen integrated modules: User Management with institutional code-based registration, Department Management, Course and Subject Management, Attendance Tracking with QR-code scanning support, Examination Scheduling, Result Entry and Grade Computation, Study Materials Repository, Announcement Broadcasting, Academic Calendar, Timetable Builder, Lesson Planning, Library Management with book issue and return tracking, Office Hours scheduling, Student Feedback collection, AI-powered Lecture Summarization leveraging Google Gemini, and comprehensive Audit Logging for administrative oversight.
+
+The frontend utilizes modern React patterns including lazy-loading, context-based state management, Framer Motion animations, Recharts data visualizations, and FullCalendar integration. The application is cross-platform capable via \textbf{Capacitor}, enabling deployment as both a web application and a native Android APK.
+
+Testing and validation were conducted across all modules, confirming that EduConnect delivers a secure, performant, and user-friendly experience. The system demonstrates the feasibility of building a comprehensive institutional management solution using modern open-source technologies.
+
+\vspace{0.5cm}
+\emph{Keywords: College Management System, React, Django, REST API, JWT Authentication, Role-Based Access Control, Attendance Tracking, QR Code, Examination Management, AI Summarization, Capacitor, Material UI}

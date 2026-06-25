@@ -1,0 +1,396 @@
+\newpage
+\section{SYSTEM DESIGN}
+\hline
+
+This chapter presents the detailed system design of EduConnect, covering the database schema, entity-relationship model, data flow diagrams, module decomposition, and the API design.
+
+\subsection{Database Design}
+
+EduConnect uses Django's ORM to define database models. The system comprises 19 database tables organized across 16 Django applications. Table~\ref{tab:db_tables} summarizes all database tables and their purposes.
+
+\begin{table}[H]
+\centering
+\caption{Database Tables in EduConnect}
+\label{tab:db_tables}
+\footnotesize
+\begin{tabular}{|c|p{3.5cm}|p{7.5cm}|}
+\hline
+\textbf{S.No.} & \textbf{Table Name} & \textbf{Description} \\
+\hline
+1 & \texttt{users} & Custom user model extending Django's AbstractUser with role, approval status, department, avatar, and session management fields \\
+\hline
+2 & \texttt{user\_profiles} & Extended profile data (enrollment number, stream, section, guardian info, qualifications) \\
+\hline
+3 & \texttt{departments} & Academic departments with name, code, description, and HoD assignment \\
+\hline
+4 & \texttt{courses} & Courses with code, name, credits, teacher assignment, and many-to-many student enrollment \\
+\hline
+5 & \texttt{subjects} & Subjects linked to courses with teacher assignment \\
+\hline
+6 & \texttt{attendance\_records} & Individual attendance entries (student, course, subject, date, status, method) \\
+\hline
+7 & \texttt{active\_qr\_codes} & Temporary QR tokens for automated attendance marking \\
+\hline
+8 & \texttt{attendance\_edit\_requests} & Student requests to modify attendance records with teacher approval workflow \\
+\hline
+9 & \texttt{exams} & Examination details (title, course, subject, date, type, max marks) \\
+\hline
+10 & \texttt{results} & Student exam results with marks, auto-computed grades, and publish status \\
+\hline
+11 & \texttt{study\_materials} & Uploaded files (documents, PDFs) categorized by course and subject \\
+\hline
+12 & \texttt{announcements} & Institution-wide announcements with title, content, and priority \\
+\hline
+13 & \texttt{calendar\_events} & Academic calendar events with date, time, and description \\
+\hline
+14 & \texttt{feedback} & Student feedback entries with ratings and comments \\
+\hline
+15 & \texttt{office\_hours} & Teacher office hour slots with booking capability \\
+\hline
+16 & \texttt{timetables} & Class schedules stored as JSON (day, slots with subject, teacher, time, room) \\
+\hline
+17 & \texttt{lesson\_plans} & Teacher lesson plans linked to subjects \\
+\hline
+18 & \texttt{books} & Library book inventory (title, author, ISBN, copies, shelf location) \\
+\hline
+19 & \texttt{book\_transactions} & Book issue/return records with due dates and fine tracking \\
+\hline
+20 & \texttt{audit\_logs} & System audit trail (user, action, target, IP, timestamp) \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Entity-Relationship Diagram}
+
+The ER diagram for EduConnect captures the relationships between the major entities in the system. The key relationships are described below:
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{User $\leftrightarrow$ UserProfile:} One-to-one relationship. Each user has exactly one profile containing extended information.
+    
+    \item \textbf{User $\rightarrow$ Department:} Many-to-one relationship. Multiple users can belong to one department.
+    
+    \item \textbf{Course $\rightarrow$ Department:} Many-to-one relationship. A department can offer multiple courses.
+    
+    \item \textbf{Course $\leftrightarrow$ User (students):} Many-to-many relationship. Students can enroll in multiple courses, and each course can have multiple students.
+    
+    \item \textbf{Course $\rightarrow$ User (teacher):} Many-to-one relationship. Each course is assigned one teacher.
+    
+    \item \textbf{Subject $\rightarrow$ Course:} Many-to-one relationship. Each course can have multiple subjects.
+    
+    \item \textbf{AttendanceRecord $\rightarrow$ User, Course, Subject:} Foreign key relationships linking each attendance entry to a student, course, and subject.
+    
+    \item \textbf{Exam $\rightarrow$ Course, Subject:} Each exam belongs to a course and optionally a subject.
+    
+    \item \textbf{Result $\rightarrow$ User, Exam:} Each result links a student to an exam with unique\_together constraint.
+    
+    \item \textbf{Book $\leftrightarrow$ BookTransaction $\rightarrow$ User:} Books are tracked through transactions that link to students.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\textwidth}{
+\centering
+\vspace{0.5em}
+\textbf{Entity-Relationship Diagram (Simplified)}\\[1em]
+\footnotesize
+\begin{tabular}{ccccc}
+\fbox{User} & $\xrightarrow{1:1}$ & \fbox{UserProfile} & & \\[0.5em]
+$\downarrow$ \scriptsize{M:1} & & & & \\[0.5em]
+\fbox{Department} & $\xleftarrow{M:1}$ & \fbox{Course} & $\xrightarrow{M:1}$ & \fbox{User (Teacher)} \\[0.5em]
+& & $\downarrow$ \scriptsize{1:M} & & \\[0.5em]
+& & \fbox{Subject} & & \\[0.5em]
+& & $\downarrow$ \scriptsize{1:M} & & \\[0.5em]
+\fbox{AttendanceRecord} & & \fbox{Exam} & $\xrightarrow{1:M}$ & \fbox{Result} \\[0.5em]
+\fbox{Book} & $\xrightarrow{1:M}$ & \fbox{BookTransaction} & $\xrightarrow{M:1}$ & \fbox{User (Student)} \\
+\end{tabular}
+\vspace{0.5em}
+}}
+\caption{Simplified ER Diagram of EduConnect}
+\label{fig:er_diagram}
+\end{figure}
+
+\subsection{User Model Design}
+
+The User model is the central entity in EduConnect. It extends Django's \texttt{AbstractUser} with custom fields:
+
+\begin{table}[H]
+\centering
+\caption{User Model Fields}
+\label{tab:user_model}
+\footnotesize
+\begin{tabular}{|p{3.5cm}|p{3cm}|p{7cm}|}
+\hline
+\textbf{Field} & \textbf{Type} & \textbf{Description} \\
+\hline
+email & EmailField (unique) & Primary login identifier \\
+\hline
+role & CharField & One of: admin, teacher, student \\
+\hline
+is\_approved & BooleanField & Admin approval flag (default: False) \\
+\hline
+phone & CharField & Contact phone number \\
+\hline
+avatar & ImageField & Profile picture upload \\
+\hline
+department & ForeignKey & Link to Department model \\
+\hline
+current\_session\_id & CharField & Active session identifier for single-device enforcement \\
+\hline
+reset\_code & CharField & 6-digit password reset verification code \\
+\hline
+reset\_code\_expires\_at & DateTimeField & Expiry timestamp for reset code (10 min) \\
+\hline
+created\_at & DateTimeField & Account creation timestamp \\
+\hline
+updated\_at & DateTimeField & Last update timestamp \\
+\hline
+\end{tabular}
+\end{table}
+
+The \texttt{UserProfile} model extends the User with additional fields:
+
+\begin{table}[H]
+\centering
+\caption{UserProfile Model Fields}
+\label{tab:profile_model}
+\footnotesize
+\begin{tabular}{|p{3.5cm}|p{3cm}|p{7cm}|}
+\hline
+\textbf{Field} & \textbf{Type} & \textbf{Description} \\
+\hline
+date\_of\_birth & DateField & Student/teacher date of birth \\
+\hline
+stream & CharField & Academic stream (e.g., 11th Science, 12th Commerce) \\
+\hline
+section & CharField & Class section (A, B, C, etc.) \\
+\hline
+enrollment\_no & CharField & Student enrollment/PRN number \\
+\hline
+employee\_id & CharField & Teacher employee identifier \\
+\hline
+guardian\_name & CharField & Student's guardian name \\
+\hline
+guardian\_phone & CharField & Guardian contact number \\
+\hline
+qualification & CharField & Teacher's educational qualification \\
+\hline
+specialization & CharField & Teacher's area of specialization \\
+\hline
+academic\_year & CharField & Current academic year (default: 2026-27) \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Data Flow Diagram}
+
+\subsubsection{Level~0 DFD (Context Diagram)}
+
+The Level~0 DFD shows the system as a single process interacting with three external entities: Admin, Teacher, and Student.
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.85\textwidth}{
+\centering
+\vspace{0.5em}
+\textbf{Level 0 --- Context Diagram}\\[1em]
+\begin{tabular}{ccc}
+\fbox{Admin} & & \fbox{Teacher} \\[0.3em]
+$\downarrow \uparrow$ & & $\downarrow \uparrow$ \\[0.3em]
+\multicolumn{3}{c}{\fbox{\parbox{6cm}{\centering \textbf{EduConnect System} \\ \footnotesize Manages users, courses, attendance, \\ exams, results, library, AI, and more}}} \\[0.3em]
+& $\downarrow \uparrow$ & \\[0.3em]
+& \fbox{Student} & \\
+\end{tabular}
+\vspace{0.5em}
+}}
+\caption{Level 0 DFD --- Context Diagram}
+\label{fig:dfd_level0}
+\end{figure}
+
+\subsubsection{Level~1 DFD}
+
+The Level~1 DFD decomposes the system into its major sub-processes:
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\textwidth}{
+\centering
+\vspace{0.5em}
+\textbf{Level 1 --- Data Flow Diagram}\\[0.8em]
+\footnotesize
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Process} & \textbf{Inputs} & \textbf{Outputs} \\
+\hline
+1.0 Authentication & Credentials, Inst. Code & JWT Tokens, User Data \\
+\hline
+2.0 User Management & User Data, CSV/Excel & Approved Users, Reports \\
+\hline
+3.0 Course Management & Course Data, Enrollments & Course Listings \\
+\hline
+4.0 Attendance & QR Token, Manual Entry & Attendance Records \\
+\hline
+5.0 Exam Management & Exam Details & Exam Schedules \\
+\hline
+6.0 Result Processing & Marks Entry & Grades, PDF Reports \\
+\hline
+7.0 Library Management & Book Data, Transactions & Issue/Return Records \\
+\hline
+8.0 AI Summarization & Text/File & Summaries, Checklists \\
+\hline
+9.0 Communication & Announcements, Events & Notifications, Calendar \\
+\hline
+\end{tabular}
+\vspace{0.5em}
+}}
+\caption{Level 1 DFD of EduConnect}
+\label{fig:dfd_level1}
+\end{figure}
+
+\subsection{API Design}
+
+EduConnect exposes a RESTful API under the prefix \texttt{/api/v1/}. The API follows these design principles:
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Standardized Response Format:} All endpoints return JSON in the format \texttt{\{success: boolean, message: string, data: object\}}.
+    \item \textbf{CamelCase Serialization:} Django's snake\_case field names are automatically converted to camelCase in API responses and vice versa in requests, using a custom \texttt{CamelCaseSerializer}.
+    \item \textbf{JWT Authentication:} All protected endpoints require a valid JWT in the \texttt{Authorization: Bearer <token>} header.
+    \item \textbf{Permission Classes:} Custom permission classes (\texttt{IsAdmin}, \texttt{IsTeacher}, \texttt{IsStudent}, \texttt{IsAdminOrTeacher}, \texttt{IsApproved}) enforce role-based access.
+    \item \textbf{Pagination:} List endpoints use a standard pagination class with a default page size of 20.
+\end{itemize}
+
+Table~\ref{tab:api_endpoints} summarizes the key API endpoint groups.
+
+\begin{table}[H]
+\centering
+\caption{Summary of API Endpoint Groups}
+\label{tab:api_endpoints}
+\footnotesize
+\begin{tabular}{|p{3.5cm}|p{4cm}|p{6cm}|}
+\hline
+\textbf{Module} & \textbf{Base Endpoint} & \textbf{Key Operations} \\
+\hline
+Authentication & \texttt{/auth/} & Login, Register, Refresh, Logout, Forgot/Reset Password \\
+\hline
+Users & \texttt{/users/} & CRUD, Approve, Change Role, Bulk Import/Delete \\
+\hline
+Dashboards & \texttt{/dashboard/} & Admin, Teacher, Student dashboard data \\
+\hline
+Departments & \texttt{/departments/} & CRUD, Assign HoD \\
+\hline
+Courses & \texttt{/courses/} & CRUD, Enroll Students, Get Students \\
+\hline
+Subjects & \texttt{/subjects/} & CRUD \\
+\hline
+Attendance & \texttt{/attendance/} & Mark, QR Generate/Scan, Reports, Edit Requests \\
+\hline
+Exams & \texttt{/exams/} & CRUD \\
+\hline
+Results & \texttt{/results/} & Entry, By Exam/Student, Publish, Progress Report \\
+\hline
+Study Materials & \texttt{/materials/} & CRUD, Download, Question Papers \\
+\hline
+Announcements & \texttt{/announcements/} & CRUD \\
+\hline
+Calendar & \texttt{/calendar/} & CRUD \\
+\hline
+Timetables & \texttt{/timetables/} & CRUD, Teacher Schedule, Validate \\
+\hline
+Lesson Plans & \texttt{/lesson-plans/} & CRUD \\
+\hline
+Library & \texttt{/library/} & Books CRUD, Issue, Return, Transactions \\
+\hline
+Office Hours & \texttt{/office-hours/} & CRUD, Book, Cancel \\
+\hline
+Feedback & \texttt{/feedback/} & Submit, List, Summary \\
+\hline
+AI Summary & \texttt{/ai/} & Lecture Summary (text), File Summary \\
+\hline
+Audit Logs & \texttt{/audit-logs/} & List, Delete All \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Frontend Architecture}
+
+The frontend follows a modular component-based architecture organized as follows:
+
+\begin{table}[H]
+\centering
+\caption{Frontend Directory Structure}
+\label{tab:frontend_structure}
+\footnotesize
+\begin{tabular}{|p{3.5cm}|p{10cm}|}
+\hline
+\textbf{Directory} & \textbf{Contents and Purpose} \\
+\hline
+\texttt{src/api/} & Axios instance configuration with JWT interceptors, and API service functions organized by module \\
+\hline
+\texttt{src/components/} & Reusable components: DashboardLayout (sidebar + topbar + content), ProtectedRoute, LoadingScreen \\
+\hline
+\texttt{src/contexts/} & React Context providers: AuthContext (auth state, login/logout), ThemeContext (dark/light mode), NotificationContext (toast notifications) \\
+\hline
+\texttt{src/hooks/} & Custom hooks: useAppPermissions (Capacitor native permission requests) \\
+\hline
+\texttt{src/pages/admin/} & Admin-only pages: UserManagement, Departments, AuditLogs, AttendanceReports \\
+\hline
+\texttt{src/pages/teacher/} & Teacher pages: SubjectList, AttendanceMarker, ExamManager, ResultEntry, LessonPlanner, AISummary \\
+\hline
+\texttt{src/pages/student/} & Student pages: CourseDetails, StudentAttendance, StudentResults, StudentExams, StudyMaterials \\
+\hline
+\texttt{src/pages/common/} & Shared pages: Announcements, Calendar, Timetable, Library, Feedback, OfficeHours, Settings \\
+\hline
+\texttt{src/pages/auth/} & Authentication pages: Login, Register, ForgotPassword \\
+\hline
+\texttt{src/styles/} & Global CSS and MUI theme configuration with custom design tokens \\
+\hline
+\texttt{src/utils/} & Utility functions and constants \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Authentication Flow}
+
+The authentication system implements a multi-layered security approach:
+
+\begin{enumerate}[label=\arabic*., leftmargin=2em]
+    \item \textbf{Registration:} Users register with personal details, role selection, and an institutional code (required for admin and teacher roles). All new registrations require admin approval.
+    
+    \item \textbf{Login:} Users authenticate with email and password. Upon successful authentication, the server generates an access token (60-minute lifetime) and a refresh token (7-day lifetime). For student users, a unique session ID is embedded in the token to enforce single-device login.
+    
+    \item \textbf{Token Refresh:} When the access token expires, the frontend Axios interceptor automatically attempts a token refresh using the refresh token. If successful, the new access token is stored and the original failed request is retried.
+    
+    \item \textbf{Session Validation:} For student users, each API request validates not only the JWT signature but also the session ID embedded in the token against the user's current session ID in the database. This prevents concurrent logins from multiple devices.
+    
+    \item \textbf{Password Reset:} A 6-digit verification code is sent to the user's email. The code expires after 10 minutes. If SMTP is not configured, the code is printed to the server console for development purposes.
+\end{enumerate}
+
+\subsection{Grade Computation Algorithm}
+
+The Result model implements automatic grade computation based on percentage scores:
+
+\begin{table}[H]
+\centering
+\caption{Grade Computation Rules}
+\label{tab:grades}
+\begin{tabular}{|c|c|}
+\hline
+\textbf{Percentage Range} & \textbf{Grade} \\
+\hline
+$\geq 90\%$ & A+ \\
+\hline
+$80\% - 89\%$ & A \\
+\hline
+$75\% - 79\%$ & B+ \\
+\hline
+$70\% - 74\%$ & B \\
+\hline
+$60\% - 69\%$ & C \\
+\hline
+$50\% - 59\%$ & D \\
+\hline
+$< 50\%$ & F \\
+\hline
+\end{tabular}
+\end{table}
+
+This computation is performed automatically in the \texttt{Result.save()} method, ensuring consistency across all result entries.

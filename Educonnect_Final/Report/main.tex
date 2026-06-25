@@ -1,0 +1,110 @@
+\documentclass[12pt]{article}
+\usepackage{report}
+
+\usepackage[acronym]{glossaries}
+\usepackage{rotating}
+\usepackage{float}
+\usepackage{siunitx}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage[justification=centering]{caption}
+\captionsetup[figure]{font=small}
+\usepackage{booktabs}
+\usepackage[table,xcdraw]{xcolor}
+\usepackage{chngcntr}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{subcaption}
+\usepackage{tocloft}
+\usepackage{indentfirst}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{flafter}
+\usepackage{longtable}
+\usepackage{pdflscape}
+\usepackage{tabularx}
+\usepackage{makecell}
+
+% Code listing style
+\lstdefinestyle{codestyle}{
+  backgroundcolor=\color{gray!10},
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue!70!black}\bfseries,
+  stringstyle=\color{red!70!black},
+  commentstyle=\color{green!50!black}\itshape,
+  showstringspaces=false,
+  tabsize=2,
+  captionpos=b,
+}
+\lstset{style=codestyle}
+
+\setcounter{secnumdepth}{3} % for subheadings
+\setlength{\cfttabindent}{0pt} %for tables
+\setlength{\cftfigindent}{0pt} %for figures
+
+
+\title{Minor Project Report --- EduConnect}
+\author{Student}
+\date{\today}
+
+
+
+\begin{document}
+
+
+\input{sec/titlepage}
+
+
+\pagenumbering{roman} % roman page numbers
+
+%% Certificate, Declaration
+\input{sec/certificate}
+\input{sec/declaration}
+
+%% Acknowledgment, Abstract
+\input{sec/acknowledgment}
+\input{sec/abstract}
+
+% Table of contents
+\newpage
+{
+\begin{center}
+    \setlength{\parskip}{0em}
+  \renewcommand\contentsname{{TABLE OF CONTENTS}}
+  \tableofcontents
+\end{center}
+  
+}
+
+% List of figures
+\newpage
+\listoffigures 
+\addcontentsline{toc}{section}{LIST OF FIGURES}
+
+% List of tables
+\newpage
+\listoftables 
+\addcontentsline{toc}{section}{LIST OF TABLES}
+
+% List of abbreviations
+\newpage
+\input{sec/list_of_abbrev}
+
+% Main chapters
+\newpage
+\input{sec/introduction}
+\input{sec/literature_review}
+\input{sec/gaps}
+\input{sec/system_design}
+\input{sec/implementation}
+\input{sec/testing}
+\input{sec/result}
+\input{sec/conclusion}
+\input{sec/references}
+\input{sec/appendix}
+\end{document}

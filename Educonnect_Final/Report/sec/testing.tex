@@ -1,0 +1,306 @@
+\newpage
+\section{TESTING AND VALIDATION}
+\hline
+
+This chapter describes the testing strategies employed to validate the functionality, security, and performance of the EduConnect system. A combination of manual testing, functional testing, and security testing was conducted across all modules.
+
+\subsection{Testing Methodology}
+
+The testing process followed a structured approach:
+
+\begin{enumerate}[label=\arabic*., leftmargin=2em]
+    \item \textbf{Unit Testing:} Individual functions and model methods (e.g., grade computation, token generation) were tested in isolation.
+    \item \textbf{Integration Testing:} API endpoints were tested end-to-end using tools such as Postman and the Django test client, verifying correct request handling, authentication, authorization, and response formatting.
+    \item \textbf{Functional Testing:} Each module was tested against its functional requirements, verifying that all features work as specified.
+    \item \textbf{Security Testing:} Authentication, authorization, and data access controls were tested by attempting unauthorized access to protected endpoints.
+    \item \textbf{User Interface Testing:} The frontend was tested across multiple browsers (Chrome, Firefox, Edge) and screen sizes (desktop, tablet, mobile) to ensure responsive behavior.
+    \item \textbf{Cross-Platform Testing:} The Android APK was tested on multiple devices to verify native functionality.
+\end{enumerate}
+
+\subsection{Test Cases --- Authentication Module}
+
+\begin{table}[H]
+\centering
+\caption{Test Cases --- Authentication Module}
+\label{tab:test_auth}
+\footnotesize
+\begin{tabular}{|c|p{4cm}|p{4cm}|p{2cm}|c|}
+\hline
+\textbf{TC ID} & \textbf{Test Case} & \textbf{Expected Result} & \textbf{Status} & \textbf{Pass/Fail} \\
+\hline
+TC-A01 & Register with valid data and student role & User created, status ``pending approval'' & Tested & Pass \\
+\hline
+TC-A02 & Register with invalid admin code & Error: ``Invalid admin institutional code'' & Tested & Pass \\
+\hline
+TC-A03 & Register with duplicate email & Error: ``User with this email already exists'' & Tested & Pass \\
+\hline
+TC-A04 & Login with valid credentials (approved user) & JWT tokens returned with user data & Tested & Pass \\
+\hline
+TC-A05 & Login with unapproved account & Error: ``Your account is pending admin approval'' & Tested & Pass \\
+\hline
+TC-A06 & Login with invalid credentials & Error: ``Invalid credentials'' (401) & Tested & Pass \\
+\hline
+TC-A07 & Access protected endpoint without token & Error: ``Authentication required'' (401) & Tested & Pass \\
+\hline
+TC-A08 & Token refresh with valid refresh token & New access token issued & Tested & Pass \\
+\hline
+TC-A09 & Token refresh with expired token & Error: ``Invalid or expired refresh token'' & Tested & Pass \\
+\hline
+TC-A10 & Student login from second device & First device session invalidated & Tested & Pass \\
+\hline
+TC-A11 & Forgot password with valid email & Verification code generated and sent & Tested & Pass \\
+\hline
+TC-A12 & Reset password with valid code & Password updated successfully & Tested & Pass \\
+\hline
+TC-A13 & Reset password with expired code & Error: ``Code has expired'' & Tested & Pass \\
+\hline
+TC-A14 & Change password with correct old password & Password changed successfully & Tested & Pass \\
+\hline
+TC-A15 & Logout clears student session & Session ID set to null & Tested & Pass \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Test Cases --- User Management Module}
+
+\begin{table}[H]
+\centering
+\caption{Test Cases --- User Management Module}
+\label{tab:test_users}
+\footnotesize
+\begin{tabular}{|c|p{4cm}|p{4cm}|p{2cm}|c|}
+\hline
+\textbf{TC ID} & \textbf{Test Case} & \textbf{Expected Result} & \textbf{Status} & \textbf{Pass/Fail} \\
+\hline
+TC-U01 & Admin views user list & All users returned with profiles & Tested & Pass \\
+\hline
+TC-U02 & Admin filters by role & Only users with specified role returned & Tested & Pass \\
+\hline
+TC-U03 & Admin approves pending user & User is\_approved set to True & Tested & Pass \\
+\hline
+TC-U04 & Admin bulk approves users & Multiple users approved & Tested & Pass \\
+\hline
+TC-U05 & Admin changes user role & User role updated & Tested & Pass \\
+\hline
+TC-U06 & Admin deletes user & User removed from database & Tested & Pass \\
+\hline
+TC-U07 & Non-admin attempts user deletion & Error: ``Permission denied'' (403) & Tested & Pass \\
+\hline
+TC-U08 & Admin imports users via CSV & Users created with profiles & Tested & Pass \\
+\hline
+TC-U09 & Admin imports users via Excel & Users created with profiles & Tested & Pass \\
+\hline
+TC-U10 & Bulk delete with valid security code & Students deleted by class filter & Tested & Pass \\
+\hline
+TC-U11 & Bulk delete with invalid security code & Error: ``Invalid security code'' & Tested & Pass \\
+\hline
+TC-U12 & User updates own profile & Profile fields updated & Tested & Pass \\
+\hline
+TC-U13 & User uploads avatar & Avatar saved and URL returned & Tested & Pass \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Test Cases --- Attendance Module}
+
+\begin{table}[H]
+\centering
+\caption{Test Cases --- Attendance Module}
+\label{tab:test_attendance}
+\footnotesize
+\begin{tabular}{|c|p{4cm}|p{4cm}|p{2cm}|c|}
+\hline
+\textbf{TC ID} & \textbf{Test Case} & \textbf{Expected Result} & \textbf{Status} & \textbf{Pass/Fail} \\
+\hline
+TC-AT01 & Teacher marks manual attendance & Records created for each student & Tested & Pass \\
+\hline
+TC-AT02 & Duplicate attendance entry & Error: Unique constraint violation & Tested & Pass \\
+\hline
+TC-AT03 & Teacher generates QR code & 6-char token created with expiry & Tested & Pass \\
+\hline
+TC-AT04 & Student scans valid QR & Attendance marked as Present (QR) & Tested & Pass \\
+\hline
+TC-AT05 & Student scans expired QR & Error: ``QR code has expired'' & Tested & Pass \\
+\hline
+TC-AT06 & Student not enrolled scans QR & Error: ``Not enrolled in this course'' & Tested & Pass \\
+\hline
+TC-AT07 & Student views own attendance & Attendance records for enrolled courses & Tested & Pass \\
+\hline
+TC-AT08 & Student submits edit request & Edit request created with Pending status & Tested & Pass \\
+\hline
+TC-AT09 & Teacher approves edit request & Attendance record updated, request approved & Tested & Pass \\
+\hline
+TC-AT10 & Admin views attendance reports & Aggregated reports returned & Tested & Pass \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Test Cases --- Examination and Results Module}
+
+\begin{table}[H]
+\centering
+\caption{Test Cases --- Examination and Results Module}
+\label{tab:test_exams}
+\footnotesize
+\begin{tabular}{|c|p{4cm}|p{4cm}|p{2cm}|c|}
+\hline
+\textbf{TC ID} & \textbf{Test Case} & \textbf{Expected Result} & \textbf{Status} & \textbf{Pass/Fail} \\
+\hline
+TC-E01 & Teacher creates exam & Exam record created with all fields & Tested & Pass \\
+\hline
+TC-E02 & Teacher enters results & Results saved with auto-computed grades & Tested & Pass \\
+\hline
+TC-E03 & Marks 95/100 entered & Grade computed as A+ & Tested & Pass \\
+\hline
+TC-E04 & Marks 45/100 entered & Grade computed as F & Tested & Pass \\
+\hline
+TC-E05 & Teacher publishes results & is\_published set to True & Tested & Pass \\
+\hline
+TC-E06 & Student views published results & Results with grades displayed & Tested & Pass \\
+\hline
+TC-E07 & Student views unpublished results & Results not visible & Tested & Pass \\
+\hline
+TC-E08 & Bulk result entry & Multiple results created in one request & Tested & Pass \\
+\hline
+TC-E09 & PDF progress report generation & Valid PDF file downloaded & Tested & Pass \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Test Cases --- Library Module}
+
+\begin{table}[H]
+\centering
+\caption{Test Cases --- Library Module}
+\label{tab:test_library}
+\footnotesize
+\begin{tabular}{|c|p{4cm}|p{4cm}|p{2cm}|c|}
+\hline
+\textbf{TC ID} & \textbf{Test Case} & \textbf{Expected Result} & \textbf{Status} & \textbf{Pass/Fail} \\
+\hline
+TC-L01 & Admin adds a new book & Book record created in database & Tested & Pass \\
+\hline
+TC-L02 & Add book with duplicate ISBN & Error: ``ISBN already exists'' & Tested & Pass \\
+\hline
+TC-L03 & Issue book to student & Transaction created, available copies decremented & Tested & Pass \\
+\hline
+TC-L04 & Issue book with zero available copies & Error: ``No copies available'' & Tested & Pass \\
+\hline
+TC-L05 & Return book & Transaction updated, available copies incremented & Tested & Pass \\
+\hline
+TC-L06 & Return overdue book & Fine calculated based on overdue days & Tested & Pass \\
+\hline
+TC-L07 & Student views borrowed books & Only student's own transactions returned & Tested & Pass \\
+\hline
+TC-L08 & Search books by title/author & Filtered results returned & Tested & Pass \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Test Cases --- AI Summarization Module}
+
+\begin{table}[H]
+\centering
+\caption{Test Cases --- AI Summarization Module}
+\label{tab:test_ai}
+\footnotesize
+\begin{tabular}{|c|p{4cm}|p{4cm}|p{2cm}|c|}
+\hline
+\textbf{TC ID} & \textbf{Test Case} & \textbf{Expected Result} & \textbf{Status} & \textbf{Pass/Fail} \\
+\hline
+TC-AI01 & Submit long transcript & Bullet-point summary generated & Tested & Pass \\
+\hline
+TC-AI02 & Request detailed format & Detailed narrative summary generated & Tested & Pass \\
+\hline
+TC-AI03 & Request checklist format & Study checklist with checkboxes generated & Tested & Pass \\
+\hline
+TC-AI04 & Submit short keyword & Fallback message with instructions displayed & Tested & Pass \\
+\hline
+TC-AI05 & Upload text file for summary & File content parsed and summarized & Tested & Pass \\
+\hline
+TC-AI06 & Gemini API not configured & Heuristic fallback produces output & Tested & Pass \\
+\hline
+TC-AI07 & Empty text submitted & Error: ``Text content is required'' & Tested & Pass \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Security Testing}
+
+\begin{table}[H]
+\centering
+\caption{Security Test Cases}
+\label{tab:test_security}
+\footnotesize
+\begin{tabular}{|c|p{4cm}|p{4cm}|p{2cm}|c|}
+\hline
+\textbf{TC ID} & \textbf{Test Case} & \textbf{Expected Result} & \textbf{Status} & \textbf{Pass/Fail} \\
+\hline
+TC-S01 & Access admin endpoint as student & 403 Forbidden & Tested & Pass \\
+\hline
+TC-S02 & Access teacher endpoint as student & 403 Forbidden & Tested & Pass \\
+\hline
+TC-S03 & Access API without JWT & 401 Unauthorized & Tested & Pass \\
+\hline
+TC-S04 & Use tampered JWT token & 401 Unauthorized & Tested & Pass \\
+\hline
+TC-S05 & Student accesses another student's data & Only own data returned & Tested & Pass \\
+\hline
+TC-S06 & CORS request from disallowed origin & Request blocked & Tested & Pass \\
+\hline
+TC-S07 & SQL injection in search fields & ORM prevents injection & Tested & Pass \\
+\hline
+TC-S08 & XSS payload in text fields & Input sanitized/escaped & Tested & Pass \\
+\hline
+TC-S09 & Concurrent student login & Previous session invalidated & Tested & Pass \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Browser Compatibility Testing}
+
+\begin{table}[H]
+\centering
+\caption{Browser Compatibility Test Results}
+\label{tab:test_browser}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Browser} & \textbf{Desktop} & \textbf{Mobile} & \textbf{Status} \\
+\hline
+Google Chrome 120+ & \checkmark & \checkmark & Pass \\
+\hline
+Mozilla Firefox 115+ & \checkmark & \checkmark & Pass \\
+\hline
+Microsoft Edge 120+ & \checkmark & -- & Pass \\
+\hline
+Safari 17+ & \checkmark & \checkmark & Pass \\
+\hline
+Android WebView (Capacitor) & -- & \checkmark & Pass \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Responsive Design Testing}
+
+The application was tested across four breakpoint categories:
+
+\begin{table}[H]
+\centering
+\caption{Responsive Design Test Results}
+\label{tab:test_responsive}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Screen Size} & \textbf{Viewport Width} & \textbf{Status} \\
+\hline
+Mobile & 320px -- 600px & Pass \\
+\hline
+Tablet & 600px -- 960px & Pass \\
+\hline
+Laptop & 960px -- 1280px & Pass \\
+\hline
+Desktop & 1280px+ & Pass \\
+\hline
+\end{tabular}
+\end{table}
+
+All layouts, navigation menus, cards, tables, and forms were verified to render correctly and remain functional across all screen sizes. The sidebar navigation automatically collapses to a drawer on mobile devices, and data tables switch to a card-based layout on smaller screens.

@@ -1,0 +1,180 @@
+\newpage 
+\section{PROPOSED METHODOLOGY}
+\hline
+
+This chapter describes the development methodology adopted for EduConnect, the overall system architecture, and the tools and technologies employed.
+
+\subsection{Development Methodology}
+
+The development of EduConnect followed an \textbf{Agile-Iterative} methodology, which emphasizes incremental development, continuous feedback, and iterative refinement. The project was divided into sprints, each focusing on a specific module or feature set. This approach allowed for:
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Incremental Delivery:} Core modules (authentication, user management, courses) were developed first, followed by secondary modules (attendance, exams, results) and then tertiary modules (library, AI summary, timetable).
+    
+    \item \textbf{Continuous Testing:} Each module was tested individually as it was developed, ensuring that bugs were caught early.
+    
+    \item \textbf{Flexibility:} Requirements could be refined based on feedback from each iteration, allowing the system to evolve organically.
+    
+    \item \textbf{Parallel Development:} The frontend and backend were developed in parallel, communicating through a well-defined RESTful API contract.
+\end{itemize}
+
+\subsection{System Architecture Overview}
+
+EduConnect follows a \textbf{three-tier client-server architecture}:
+
+\begin{enumerate}[label=\arabic*., leftmargin=2em]
+    \item \textbf{Presentation Tier (Frontend):} A React~19 Single-Page Application (SPA) built with Vite as the build tool. The frontend communicates with the backend exclusively through REST API calls using Axios. It is responsible for rendering the user interface, managing client-side state, and handling user interactions.
+    
+    \item \textbf{Application Tier (Backend):} A Django~5 application with Django REST Framework (DRF) that exposes RESTful API endpoints. The backend handles business logic, authentication, authorization, data validation, and database operations.
+    
+    \item \textbf{Data Tier (Database):} SQLite for development and PostgreSQL for production. Django's ORM abstracts database operations, allowing seamless switching between database engines.
+\end{enumerate}
+
+The communication between the frontend and backend is stateless, with each API request carrying a JWT in the \texttt{Authorization} header for authentication. The backend validates the token, checks the user's role and permissions, processes the request, and returns a standardized JSON response in the format \texttt{\{success, message, data\}}.
+
+\subsection{Block Diagram}
+
+Figure~\ref{fig:block_diagram} illustrates the high-level architecture of the EduConnect system.
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.85\textwidth}{
+\centering
+\vspace{0.5em}
+\textbf{EduConnect --- System Block Diagram}\\[1em]
+\begin{tabular}{|c|}
+\hline
+\textbf{Client Layer (React 19 + MUI v5 + Vite)} \\
+\footnotesize Pages $|$ Components $|$ Context $|$ Hooks $|$ API Services \\
+\hline
+\end{tabular}\\[0.5em]
+$\Big\downarrow$ \footnotesize{REST API (JSON over HTTPS)} $\Big\uparrow$\\[0.5em]
+\begin{tabular}{|c|}
+\hline
+\textbf{API Gateway Layer (Django REST Framework)} \\
+\footnotesize URL Routing $|$ Serialization $|$ JWT Auth $|$ Permissions \\
+\hline
+\end{tabular}\\[0.5em]
+$\Big\downarrow$ $\Big\uparrow$\\[0.5em]
+\begin{tabular}{|c|}
+\hline
+\textbf{Business Logic Layer (Django Apps)} \\
+\footnotesize Accounts $|$ Attendance $|$ Exams $|$ Library $|$ AI Summary $|$ \ldots \\
+\hline
+\end{tabular}\\[0.5em]
+$\Big\downarrow$ \footnotesize{Django ORM} $\Big\uparrow$\\[0.5em]
+\begin{tabular}{|c|}
+\hline
+\textbf{Data Layer (SQLite / PostgreSQL)} \\
+\footnotesize Users $|$ Courses $|$ Attendance $|$ Results $|$ Books $|$ Logs \\
+\hline
+\end{tabular}\\[0.5em]
+\vspace{0.5em}
+\footnotesize{+ Capacitor Native Bridge $\rightarrow$ Android APK}
+\vspace{0.5em}
+}}
+\caption{System Block Diagram of EduConnect}
+\label{fig:block_diagram}
+\end{figure}
+
+\subsection{Tools and Technologies Used}
+
+Table~\ref{tab:tools} lists the tools and technologies employed in the development of EduConnect.
+
+\begin{table}[H]
+\centering
+\caption{Tools and Technologies Used}
+\label{tab:tools}
+\footnotesize
+\begin{tabular}{|p{3.5cm}|p{3cm}|p{7cm}|}
+\hline
+\textbf{Category} & \textbf{Technology} & \textbf{Purpose} \\
+\hline
+Frontend Framework & React 19 & Component-based UI library for SPA development \\
+\hline
+UI Component Library & MUI v5 & Pre-built Material Design components \\
+\hline
+Build Tool & Vite 8 & Fast development server and production bundler \\
+\hline
+State Management & React Context API & Global state for auth, theme, and notifications \\
+\hline
+Server State & TanStack React Query & API data fetching, caching, and synchronization \\
+\hline
+HTTP Client & Axios 1.17 & HTTP requests with interceptors for JWT refresh \\
+\hline
+Routing & React Router DOM 6 & Client-side routing with nested layouts \\
+\hline
+Animations & Framer Motion 12 & Smooth page transitions and micro-animations \\
+\hline
+Charts & Recharts 2.15 & Bar, Line, and Radar chart visualizations \\
+\hline
+Calendar & FullCalendar 6 & Interactive academic calendar with day/week/month views \\
+\hline
+Form Management & React Hook Form + Yup & Performant form handling with schema validation \\
+\hline
+File Upload & React Dropzone & Drag-and-drop file upload interface \\
+\hline
+Rich Text Editor & React Quill & WYSIWYG editor for announcements \\
+\hline
+QR Code & html5-qrcode, react-qr-code & QR code generation and scanning \\
+\hline
+Cross-Platform & Capacitor 8 & Web-to-native bridge for Android packaging \\
+\hline
+Backend Framework & Django 5.0.7 & Python web framework (MVT pattern) \\
+\hline
+REST API & DRF 3.15 & RESTful API toolkit with serializers and viewsets \\
+\hline
+Authentication & SimpleJWT 5.3 & JWT token generation, validation, and rotation \\
+\hline
+CORS & django-cors-headers & Cross-origin request handling \\
+\hline
+Database (Dev) & SQLite 3 & Lightweight file-based database \\
+\hline
+Database (Prod) & PostgreSQL & Production-grade relational database \\
+\hline
+AI Integration & Google Gemini API & AI-powered lecture summarization \\
+\hline
+PDF Generation & ReportLab 5.0 & PDF progress report generation \\
+\hline
+Image Processing & Pillow 11+ & Avatar image upload and processing \\
+\hline
+WSGI Server & Gunicorn 22 & Production-grade Python WSGI HTTP server \\
+\hline
+Version Control & Git & Source code version control \\
+\hline
+IDE & Visual Studio Code & Integrated development environment \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Advantages of the Proposed System}
+
+\begin{enumerate}[label=\arabic*., leftmargin=2em]
+    \item \textbf{Unified Platform:} All academic and administrative functions are available in a single application, eliminating the need for multiple disparate tools.
+    
+    \item \textbf{Role-Based Security:} Granular access control ensures that users can only access features appropriate to their role, enhancing data security and privacy.
+    
+    \item \textbf{Modern User Experience:} The use of React, MUI, Framer Motion, and a custom theme with dark/light mode support delivers a premium, engaging user experience.
+    
+    \item \textbf{Cross-Platform:} A single codebase serves both web and mobile (Android) platforms, reducing development and maintenance effort.
+    
+    \item \textbf{AI Integration:} Built-in AI summarization saves teachers time and enhances the quality of study materials.
+    
+    \item \textbf{Scalable Architecture:} The RESTful API architecture and Django's ORM enable horizontal and vertical scaling as institutional needs grow.
+    
+    \item \textbf{Cost-Effective:} Built entirely with open-source technologies, EduConnect has zero licensing costs.
+    
+    \item \textbf{Audit Trail:} Comprehensive audit logging provides transparency and accountability for all administrative actions.
+\end{enumerate}
+
+\subsection{Limitations}
+
+\begin{enumerate}[label=\arabic*., leftmargin=2em]
+    \item The AI summarization feature requires a Google Gemini API key for full functionality; without it, a local heuristic fallback is used, which has limited capability.
+    
+    \item Real-time features (e.g., live notifications, chat) are not implemented in the current version, though the \texttt{socket.io-client} dependency is included for future use.
+    
+    \item The current version targets Android for native deployment; iOS support via Capacitor is feasible but has not been tested.
+    
+    \item The system currently uses SQLite for development, which is not suitable for high-concurrency production environments; PostgreSQL should be used in production.
+\end{enumerate}
