@@ -23,7 +23,7 @@ import {
 import { PictureAsPdf, Assessment, Star, TrendingUp, Book, Lock } from '@mui/icons-material';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useAuth } from '../../contexts/AuthContext';
-import { resultApi, subjectApi } from '../../api';
+import { resultApi, subjectApi, userApi } from '../../api';
 import { setAuthHeader } from '../../api/axiosInstance';
 import PageHeader from '../../components/common/PageHeader';
 import StatCard from '../../components/common/StatCard';
@@ -33,7 +33,7 @@ import { downloadBlob } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 export default function StudentResultsPage() {
-  const { user, accessToken } = useAuth();
+  const { user, setUser, accessToken } = useAuth();
   const theme = useTheme();
   const { requestStoragePermission, isNative } = useAppPermissions();
 
@@ -68,11 +68,39 @@ export default function StudentResultsPage() {
     }
   };
 
+  const handleCheckStatus = async () => {
+    setLoading(true);
+    try {
+      setAuthHeader(accessToken);
+      const res = await userApi.getMe();
+      if (res.data.success) {
+        const updatedUser = res.data.data;
+        setUser(updatedUser);
+        sessionStorage.setItem('edu_user', JSON.stringify(updatedUser));
+        
+        if (updatedUser.feesPaid) {
+          toast.success('Your results have been unlocked!');
+        } else {
+          toast.error('Outstanding fees still pending. Please contact the administrator.', { icon: '🔒' });
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to check payment status');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (accessToken && user?.id) {
-      fetchData();
+      if (user?.feesPaid) {
+        fetchData();
+      } else {
+        setLoading(false);
+      }
     }
-  }, [accessToken, user?.id]);
+  }, [accessToken, user?.id, user?.feesPaid]);
 
   /**
    * Download PDF progress report.
@@ -159,7 +187,7 @@ export default function StudentResultsPage() {
           <Alert severity="warning" variant="outlined" sx={{ borderRadius: '12px', mb: 3, textAlign: 'left' }}>
             To unlock your results, please clear any outstanding dues and contact the college administration desk. Once approved, your reports will be instantly accessible.
           </Alert>
-          <Button variant="contained" color="primary" onClick={fetchData} sx={{ borderRadius: '12px', textTransform: 'none', px: 4, py: 1.2, fontWeight: 600 }}>
+          <Button variant="contained" color="primary" onClick={handleCheckStatus} sx={{ borderRadius: '12px', textTransform: 'none', px: 4, py: 1.2, fontWeight: 600 }}>
             Check Status Again
           </Button>
         </Card>

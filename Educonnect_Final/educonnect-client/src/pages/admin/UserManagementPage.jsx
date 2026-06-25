@@ -170,12 +170,22 @@ export default function UserManagementPage() {
   };
 
   const handleToggleFees = async (userId, isPaid) => {
+    // 1. Optimistic state update so the switch slides instantly
+    setUsers(prevUsers =>
+      prevUsers.map(u => u.id === userId ? { ...u, feesPaid: isPaid } : u)
+    );
+
+    // 2. Perform backend update
     try {
       setAuthHeader(accessToken);
       await userApi.updateUser(userId, { feesPaid: isPaid });
       toast.success(isPaid ? 'Results unlocked (marked as paid)' : 'Results locked (marked as unpaid)');
       fetchUsers();
     } catch (err) {
+      // Revert state on error
+      setUsers(prevUsers =>
+        prevUsers.map(u => u.id === userId ? { ...u, feesPaid: !isPaid } : u)
+      );
       toast.error(err.response?.data?.message || 'Failed to update fee status');
     }
   };
@@ -391,7 +401,34 @@ export default function UserManagementPage() {
           <Switch
             checked={row.feesPaid || false}
             onChange={(e) => handleToggleFees(row.id, e.target.checked)}
-            color="success"
+            sx={{
+              width: 44,
+              height: 24,
+              padding: 0,
+              display: 'flex',
+              '& .MuiSwitch-switchBase': {
+                padding: '2px',
+                color: '#f44336', // Left side is red (locked/unpaid)
+                '&.Mui-checked': {
+                  transform: 'translateX(20px)',
+                  color: '#4CAF50', // Right side is green (unlocked/paid)
+                  '& + .MuiSwitch-track': {
+                    backgroundColor: '#4CAF50',
+                    opacity: 0.4,
+                  },
+                },
+              },
+              '& .MuiSwitch-thumb': {
+                width: 20,
+                height: 20,
+                boxShadow: 'none',
+              },
+              '& .MuiSwitch-track': {
+                borderRadius: 24 / 2,
+                opacity: 0.2,
+                backgroundColor: '#f44336',
+              },
+            }}
             size="small"
           />
         );
