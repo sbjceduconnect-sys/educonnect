@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Grid, Card, CardContent, Typography, Box, LinearProgress, Chip, List, ListItem, ListItemText, ListItemIcon, Avatar, Skeleton } from '@mui/material';
-import { School, Assessment, FactCheck, Announcement, CalendarMonth, TrendingUp, MenuBook } from '@mui/icons-material';
+import { School, Assessment, FactCheck, Announcement, CalendarMonth, TrendingUp, MenuBook, Lock } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 import StatCard from '../../components/common/StatCard';
@@ -14,7 +14,7 @@ import { formatDate } from '../../utils/helpers';
 const CHART_COLORS = ['#1B3F6B', '#F07830', '#4CAF50', '#FF9800', '#F44336'];
 
 export default function StudentDashboard() {
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [chartWidth, setChartWidth] = useState(300);
@@ -22,6 +22,8 @@ export default function StudentDashboard() {
   useEffect(() => {
     setChartWidth(Math.min(window.innerWidth - 64, 800));
   }, []);
+
+  const isLocked = user?.role === 'student' && !user?.feesPaid;
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -74,10 +76,10 @@ export default function StudentDashboard() {
           <StatCard title="Attendance" value={`${data?.attendance?.percentage || 0}%`} subtitle={`${data?.attendance?.attended || 0}/${data?.attendance?.totalClasses || 0} classes`} icon={<FactCheck />} color={data?.attendance?.percentage >= 75 ? 'green' : 'red'} delay={0.1} />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <StatCard title="Overall Grade" value={data?.performance?.overallGrade || 'N/A'} subtitle={`${data?.performance?.averagePercentage || 0}% average`} icon={<Assessment />} color="blue" delay={0.2} />
+          <StatCard title="Overall Grade" value={isLocked ? 'Locked' : (data?.performance?.overallGrade || 'N/A')} subtitle={isLocked ? 'Clear fees to view' : `${data?.performance?.averagePercentage || 0}% average`} icon={<Assessment />} color="blue" delay={0.2} />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <StatCard title="Subjects Passed" value={`${data?.performance?.passed || 0}/${data?.performance?.totalSubjects || 0}`} icon={<TrendingUp />} color="green" delay={0.3} />
+          <StatCard title="Subjects Passed" value={isLocked ? 'Locked' : `${data?.performance?.passed || 0}/${data?.performance?.totalSubjects || 0}`} subtitle={isLocked ? 'Clear fees to view' : ''} icon={<TrendingUp />} color="green" delay={0.3} />
         </Grid>
       </Grid>
 
@@ -140,7 +142,13 @@ export default function StudentDashboard() {
             <Card sx={{ borderRadius: '16px', height: '100%' }}>
               <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Recent Results</Typography>
-                {performanceData.length > 0 ? (
+                {isLocked ? (
+                  <Box sx={{ py: 6, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 200 }}>
+                    <Lock sx={{ fontSize: 40, color: 'error.main', mb: 1 }} />
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>Grades & Trends Locked</Typography>
+                    <Typography variant="caption" color="text.secondary">Please clear outstanding fee dues to access your results.</Typography>
+                  </Box>
+                ) : performanceData.length > 0 ? (
                   <Box sx={{ height: 240, width: '100%', overflow: 'hidden' }}>
                     {Capacitor.isNativePlatform() ? (
                       <AreaChart width={chartWidth} height={240} data={performanceData}>

@@ -3,6 +3,7 @@ import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Box, Card, CardContent, TextField, Button, Typography, IconButton, InputAdornment,
   Alert, MenuItem, Grid, CircularProgress, useTheme, Stepper, Step, StepLabel,
+  Checkbox, FormControlLabel, Dialog, DialogTitle, DialogContent, DialogActions,
 } from '@mui/material';
 import { Visibility, VisibilityOff, PersonAdd, ArrowBack, ArrowForward } from '@mui/icons-material';
 import { motion } from 'framer-motion';
@@ -20,6 +21,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [termsDialogOpen, setTermsDialogOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     email: '', username: '', password: '', role: 'student', institutionCode: '',
@@ -27,6 +29,7 @@ export default function RegisterPage() {
       phone: '', dateOfBirth: '', stream: '', section: '', enrollmentNo: '',
       employeeId: '', guardianName: '', guardianPhone: '', qualification: '', specialization: '',
     },
+    agreeTerms: false,
   });
 
   const handleChange = (e) => {
@@ -64,6 +67,7 @@ export default function RegisterPage() {
   const canProceed = () => {
     if (activeStep === 0) return formData.email && formData.username && formData.password;
     if (activeStep === 1) return formData.firstName && formData.lastName;
+    if (activeStep === 2) return formData.agreeTerms;
     return true;
   };
 
@@ -137,6 +141,38 @@ export default function RegisterPage() {
                 <Grid item xs={12}><TextField fullWidth label="Specialization" name="profile.specialization" value={formData.profile.specialization} onChange={handleChange} /></Grid>
               </>
             )}
+            <Grid item xs={12} sx={{ mt: 1 }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    name="agreeTerms"
+                    checked={formData.agreeTerms || false}
+                    onChange={(e) => {
+                      setFormData({ ...formData, agreeTerms: e.target.checked });
+                      setError('');
+                    }}
+                    color="primary"
+                    required
+                  />
+                }
+                label={
+                  <Typography variant="body2" color="text.secondary">
+                    I agree to the{' '}
+                    <span
+                      style={{ color: theme.palette.primary.main, cursor: 'pointer', textDecoration: 'underline', fontWeight: 600 }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setTermsDialogOpen(true);
+                      }}
+                    >
+                      Terms & Conditions
+                    </span>{' '}
+                    and authorize data collection for college records.
+                  </Typography>
+                }
+              />
+            </Grid>
           </Grid>
         );
       default: return null;
@@ -263,6 +299,44 @@ export default function RegisterPage() {
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Terms & Conditions Dialog */}
+      <Dialog
+        open={termsDialogOpen}
+        onClose={() => setTermsDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: '16px' }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 800 }}>Terms & Conditions</DialogTitle>
+        <DialogContent dividers sx={{ pb: 3 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: theme.palette.primary.main }}>1. Data Collection & Usage</Typography>
+          <Typography variant="body2" color="text.secondary" paragraph>
+            EduConnect securely stores and processes your academic data, including registration details (name, email, phone number, guardian contact details), enrollment information, attendance records, and examination grades. This data is solely used to facilitate college operations and performance analytics.
+          </Typography>
+          
+          <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: theme.palette.primary.main }}>2. Device Permissions Required</Typography>
+          <Typography variant="body2" color="text.secondary" paragraph>
+            By registering, you authorize the application to access and utilize:
+            <br />
+            • <b>Storage Space:</b> Required to read and write/download official PDF progress reports and academic transcripts to your device storage.
+            <br />
+            • <b>Network Connection:</b> Required to interact with backend services for grades syncing and real-time announcements.
+          </Typography>
+          
+          <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: theme.palette.primary.main }}>3. Academic Results Lock</Typography>
+          <Typography variant="body2" color="text.secondary" paragraph>
+            Student profiles are subject to administrator approval. Furthermore, the college reserves the right to lock grade views and progress report downloads for accounts with outstanding or unpaid fee dues until cleared.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5 }}>
+          <Button onClick={() => setTermsDialogOpen(false)} variant="contained" sx={{ borderRadius: '10px', textTransform: 'none', px: 3 }}>
+            I Understand
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

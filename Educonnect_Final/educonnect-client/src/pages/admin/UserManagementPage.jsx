@@ -22,6 +22,7 @@ import {
   Select,
   TextField,
   CircularProgress,
+  Switch,
 } from '@mui/material';
 import {
   PersonAdd,
@@ -165,6 +166,17 @@ export default function UserManagementPage() {
       toast.error(err.response?.data?.message || 'Action failed');
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleToggleFees = async (userId, isPaid) => {
+    try {
+      setAuthHeader(accessToken);
+      await userApi.updateUser(userId, { feesPaid: isPaid });
+      toast.success(isPaid ? 'Results unlocked (marked as paid)' : 'Results locked (marked as unpaid)');
+      fetchUsers();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update fee status');
     }
   };
 
@@ -365,6 +377,22 @@ export default function UserManagementPage() {
             color={row.isApproved ? 'success' : 'default'}
             size="small"
             sx={{ fontWeight: 600 }}
+          />
+        );
+      },
+    },
+    {
+      field: 'feesPaid',
+      headerName: 'Results Lock (Fees Paid)',
+      flex: 1.2,
+      renderCell: ({ row }) => {
+        if (row.role !== 'student') return null;
+        return (
+          <Switch
+            checked={row.feesPaid || false}
+            onChange={(e) => handleToggleFees(row.id, e.target.checked)}
+            color="success"
+            size="small"
           />
         );
       },

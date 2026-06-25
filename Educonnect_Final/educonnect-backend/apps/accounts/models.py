@@ -12,6 +12,8 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='student')
     is_approved = models.BooleanField(default=False)
+    fees_paid = models.BooleanField(default=False)
+    agreed_to_terms = models.BooleanField(default=False)
     phone = models.CharField(max_length=20, blank=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     department = models.ForeignKey(

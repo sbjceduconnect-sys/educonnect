@@ -78,6 +78,8 @@ class ResultListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        if request.user.role == 'student' and not request.user.fees_paid:
+            return api_error("Results are locked. Please clear your outstanding dues to access them.", status=403)
         qs = Result.objects.all()
         student = request.query_params.get('student') or request.query_params.get('studentId')
         exam = request.query_params.get('exam') or request.query_params.get('examId')
@@ -174,6 +176,8 @@ class ResultByStudentView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, student_id):
+        if request.user.role == 'student' and not request.user.fees_paid:
+            return api_error("Results are locked. Please clear your outstanding dues to access them.", status=403)
         qs = Result.objects.filter(student_id=student_id)
         return api_success(data=ResultSerializer(qs, many=True).data)
 
@@ -182,6 +186,8 @@ class ResultPerformanceView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, student_id):
+        if request.user.role == 'student' and not request.user.fees_paid:
+            return api_error("Results are locked. Please clear your outstanding dues to access them.", status=403)
         qs = Result.objects.filter(student_id=student_id)
         total = qs.count()
         passed = 0
@@ -218,6 +224,8 @@ class ResultProgressReportView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, student_id):
+        if request.user.role == 'student' and not request.user.fees_paid:
+            return api_error("Results are locked. Please clear your outstanding dues to access them.", status=403)
         try:
             student = User.objects.get(pk=student_id)
         except User.DoesNotExist:

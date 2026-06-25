@@ -18,8 +18,9 @@ import {
   TableHead,
   TableRow,
   useTheme,
+  Alert,
 } from '@mui/material';
-import { PictureAsPdf, Assessment, Star, TrendingUp, Book } from '@mui/icons-material';
+import { PictureAsPdf, Assessment, Star, TrendingUp, Book, Lock } from '@mui/icons-material';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useAuth } from '../../contexts/AuthContext';
 import { resultApi, subjectApi } from '../../api';
@@ -143,6 +144,28 @@ export default function StudentResultsPage() {
   };
 
   const stats = getOverallStats();
+
+  if (!loading && !user?.feesPaid) {
+    return (
+      <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+        <Card sx={{ maxWidth: 500, width: '100%', borderRadius: '24px', textAlign: 'center', p: 4, boxShadow: '0 10px 30px rgba(0,0,0,0.1)', border: '1px solid', borderColor: 'divider', background: theme.palette.mode === 'dark' ? 'rgba(30, 50, 80, 0.4)' : '#fff' }}>
+          <Box sx={{ display: 'inline-flex', p: 2.5, borderRadius: '50%', bgcolor: 'rgba(244, 67, 54, 0.1)', color: 'error.main', mb: 3 }}>
+            <Lock sx={{ fontSize: 50 }} />
+          </Box>
+          <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>Results Locked</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Your academic progress report, grade registry, and performance analysis have been locked by the administration due to pending fee payments.
+          </Typography>
+          <Alert severity="warning" variant="outlined" sx={{ borderRadius: '12px', mb: 3, textAlign: 'left' }}>
+            To unlock your results, please clear any outstanding dues and contact the college administration desk. Once approved, your reports will be instantly accessible.
+          </Alert>
+          <Button variant="contained" color="primary" onClick={fetchData} sx={{ borderRadius: '12px', textTransform: 'none', px: 4, py: 1.2, fontWeight: 600 }}>
+            Check Status Again
+          </Button>
+        </Card>
+      </Box>
+    );
+  }
 
   // Map results to Recharts chart structure
   const chartData = [...results]

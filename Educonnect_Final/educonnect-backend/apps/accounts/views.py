@@ -498,34 +498,42 @@ class StudentDashboardView(APIView):
         }
         
         # Performance/Results
-        results = Result.objects.filter(student=student)
         recent_results = []
-        passed_count = 0
-        total_pct = 0
-        
-        for r in results:
-            pct = (r.marks / r.exam.max_marks * 100) if r.exam.max_marks else 0
-            if pct >= 40:
-                passed_count += 1
-            total_pct += pct
-            recent_results.append({
-                "id": r.id,
-                "examTitle": r.exam.title,
-                "marksObtained": r.marks,
-                "maxMarks": r.exam.max_marks,
-                "percentage": round(pct, 1),
-                "grade": r.grade
-            })
-            
-        average_pct = round(total_pct / results.count(), 1) if results.count() else 0
-        overall_grade = 'A+' if average_pct>=90 else 'A' if average_pct>=80 else 'B+' if average_pct>=75 else 'B' if average_pct>=70 else 'C' if average_pct>=60 else 'D' if average_pct>=50 else 'F' if results.exists() else 'N/A'
-        
         performance_stats = {
-            "passed": passed_count,
-            "totalSubjects": results.count(),
-            "averagePercentage": average_pct,
-            "overallGrade": overall_grade
+            "passed": 0,
+            "totalSubjects": 0,
+            "averagePercentage": 0,
+            "overallGrade": "Locked"
         }
+        
+        if student.fees_paid:
+            results = Result.objects.filter(student=student)
+            passed_count = 0
+            total_pct = 0
+            
+            for r in results:
+                pct = (r.marks / r.exam.max_marks * 100) if r.exam.max_marks else 0
+                if pct >= 40:
+                    passed_count += 1
+                total_pct += pct
+                recent_results.append({
+                    "id": r.id,
+                    "examTitle": r.exam.title,
+                    "marksObtained": r.marks,
+                    "maxMarks": r.exam.max_marks,
+                    "percentage": round(pct, 1),
+                    "grade": r.grade
+                })
+                
+            average_pct = round(total_pct / results.count(), 1) if results.count() else 0
+            overall_grade = 'A+' if average_pct>=90 else 'A' if average_pct>=80 else 'B+' if average_pct>=75 else 'B' if average_pct>=70 else 'C' if average_pct>=60 else 'D' if average_pct>=50 else 'F' if results.exists() else 'N/A'
+            
+            performance_stats = {
+                "passed": passed_count,
+                "totalSubjects": results.count(),
+                "averagePercentage": average_pct,
+                "overallGrade": overall_grade
+            }
         
         # Announcements
         announcements = Announcement.objects.all().order_by('-created_at')[:5]
@@ -548,6 +556,7 @@ class StudentDashboardView(APIView):
             })
             
         return api_success(data={
+            "feesPaid": student.fees_paid,
             "enrolledCourses": enrolled_courses.count(),
             "attendance": attendance_stats,
             "performance": performance_stats,
