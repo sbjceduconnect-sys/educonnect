@@ -261,7 +261,7 @@ class UserDetailView(APIView):
         user = self._get_user(pk)
         if not user:
             return api_error("User not found.", status=404)
-        serializer = UserSerializer(user, data=request.data, partial=True)
+        serializer = UserSerializer(user, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return api_success(data=serializer.data, message="User updated.")
