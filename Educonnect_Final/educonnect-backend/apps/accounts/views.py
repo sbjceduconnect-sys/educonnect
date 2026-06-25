@@ -507,7 +507,7 @@ class StudentDashboardView(APIView):
         }
         
         if student.fees_paid:
-            results = Result.objects.filter(student=student)
+            results = Result.objects.filter(student=student, is_published=True)
             passed_count = 0
             total_pct = 0
             

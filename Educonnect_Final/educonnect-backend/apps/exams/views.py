@@ -81,6 +81,8 @@ class ResultListView(APIView):
         if request.user.role == 'student' and not request.user.fees_paid:
             return api_error("Results are locked. Please clear your outstanding dues to access them.", status=403)
         qs = Result.objects.all()
+        if request.user.role == 'student':
+            qs = qs.filter(is_published=True)
         student = request.query_params.get('student') or request.query_params.get('studentId')
         exam = request.query_params.get('exam') or request.query_params.get('examId')
         
@@ -179,6 +181,8 @@ class ResultByStudentView(APIView):
         if request.user.role == 'student' and not request.user.fees_paid:
             return api_error("Results are locked. Please clear your outstanding dues to access them.", status=403)
         qs = Result.objects.filter(student_id=student_id)
+        if request.user.role == 'student':
+            qs = qs.filter(is_published=True)
         return api_success(data=ResultSerializer(qs, many=True).data)
 
 
@@ -189,6 +193,8 @@ class ResultPerformanceView(APIView):
         if request.user.role == 'student' and not request.user.fees_paid:
             return api_error("Results are locked. Please clear your outstanding dues to access them.", status=403)
         qs = Result.objects.filter(student_id=student_id)
+        if request.user.role == 'student':
+            qs = qs.filter(is_published=True)
         total = qs.count()
         passed = 0
         total_pct = 0
@@ -232,6 +238,8 @@ class ResultProgressReportView(APIView):
             return api_error("Student not found.", status=404)
             
         results = Result.objects.filter(student=student)
+        if request.user.role == 'student':
+            results = results.filter(is_published=True)
         
         from io import BytesIO
         from django.utils import timezone
