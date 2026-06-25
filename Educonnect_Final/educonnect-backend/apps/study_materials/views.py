@@ -7,6 +7,27 @@ from core.response import api_success, api_error
 from .models import StudyMaterial
 from .serializers import StudyMaterialSerializer
 
+def student_has_access_to_material(user, material):
+    if user.role != 'student':
+        return True
+    
+    # If student has a department
+    dept_id = user.department_id
+    if dept_id:
+        if material.course and material.course.department_id:
+            return material.course.department_id == dept_id
+        if material.subject and material.subject.department_id:
+            return material.subject.department_id == dept_id
+        return True # general/no department material
+    else:
+        # Student has no department, only allow general materials (no department)
+        if material.course and material.course.department_id:
+            return False
+        if material.subject and material.subject.department_id:
+            return False
+        return True
+
+
 class StudyMaterialListView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
@@ -14,6 +35,25 @@ class StudyMaterialListView(APIView):
     def get(self, request):
         qs = StudyMaterial.objects.all()
         
+        # Filter by department if student
+        if request.user.role == 'student':
+            from django.db.models import Q
+            dept_id = request.user.department_id
+            if dept_id:
+                qs = qs.filter(
+                    Q(course__department_id=dept_id) |
+                    Q(subject__department_id=dept_id) |
+                    Q(course__isnull=True, subject__isnull=True) |
+                    Q(course__isnull=False, course__department__isnull=True) |
+                    Q(subject__isnull=False, subject__department__isnull=True)
+                )
+            else:
+                qs = qs.filter(
+                    Q(course__isnull=True, subject__isnull=True) |
+                    (Q(course__isnull=False) & Q(course__department__isnull=True)) |
+                    (Q(subject__isnull=False) & Q(subject__department__isnull=True))
+                )
+
         # Support filters
         type_ = request.query_params.get('type')
         course_id = request.query_params.get('course_id') or request.query_params.get('courseId')
@@ -46,6 +86,8 @@ class StudyMaterialDetailView(APIView):
         obj = self._get(pk)
         if not obj:
             return api_error("Study material not found.", status=404)
+        if not student_has_access_to_material(request.user, obj):
+            return api_error("You do not have permission to access this resource.", status=403)
         return api_success(data=StudyMaterialSerializer(obj).data)
 
     def put(self, request, pk):
@@ -75,6 +117,8 @@ class StudyMaterialDownloadView(APIView):
     def get(self, request, pk):
         try:
             obj = StudyMaterial.objects.get(pk=pk)
+            if not student_has_access_to_material(request.user, obj):
+                return api_error("You do not have permission to download this resource.", status=403)
             if not obj.file:
                 return api_error("File not found on disk.", status=404)
             file_handle = obj.file.open()
@@ -91,4 +135,24 @@ class QuestionPapersListView(APIView):
 
     def get(self, request):
         qs = StudyMaterial.objects.filter(type__in=['Past Papers', 'question_paper'])
+        
+        # Filter by department if student
+        if request.user.role == 'student':
+            from django.db.models import Q
+            dept_id = request.user.department_id
+            if dept_id:
+                qs = qs.filter(
+                    Q(course__department_id=dept_id) |
+                    Q(subject__department_id=dept_id) |
+                    Q(course__isnull=True, subject__isnull=True) |
+                    Q(course__isnull=False, course__department__isnull=True) |
+                    Q(subject__isnull=False, subject__department__isnull=True)
+                )
+            else:
+                qs = qs.filter(
+                    Q(course__isnull=True, subject__isnull=True) |
+                    (Q(course__isnull=False) & Q(course__department__isnull=True)) |
+                    (Q(subject__isnull=False) & Q(subject__department__isnull=True))
+                )
+                
         return api_success(data=StudyMaterialSerializer(qs, many=True).data)
