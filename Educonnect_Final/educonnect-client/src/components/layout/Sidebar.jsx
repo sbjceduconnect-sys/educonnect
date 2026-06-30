@@ -8,7 +8,7 @@ import {
   Dashboard, People, School, MenuBook, Assessment, EventNote, CalendarMonth,
   Announcement, LibraryBooks, Feedback, Schedule, SmartToy, Settings, ExpandLess,
   ExpandMore, ChevronLeft, ChevronRight, GradeRounded, FactCheck, Description,
-  QrCode2, AdminPanelSettings, HistoryEdu,
+  QrCode2, AdminPanelSettings, HistoryEdu, Assignment,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
@@ -29,6 +29,7 @@ const getMenuItems = (role) => {
     { text: 'My Courses', icon: <School />, path: '/courses' },
     { text: 'Materials', icon: <MenuBook />, path: '/materials' },
     { text: 'Question Papers', icon: <Description />, path: '/question-papers' },
+    { text: 'Assignments', icon: <Assignment />, path: '/assignments' },
     { text: 'My Attendance', icon: <FactCheck />, path: '/attendance' },
     { text: 'Exams', icon: <GradeRounded />, path: '/exams' },
     { text: 'My Results', icon: <Assessment />, path: '/results' },
@@ -43,6 +44,7 @@ const getMenuItems = (role) => {
     { text: 'Subjects', icon: <MenuBook />, path: '/subjects' },
     { text: 'Materials', icon: <MenuBook />, path: '/materials' },
     { text: 'Question Papers', icon: <Description />, path: '/question-papers' },
+    { text: 'Assignments', icon: <Assignment />, path: '/assignments' },
     { text: 'Attendance', icon: <QrCode2 />, path: '/attendance' },
     { text: 'Exams', icon: <GradeRounded />, path: '/exams' },
     { text: 'Results', icon: <Assessment />, path: '/results' },
@@ -58,6 +60,7 @@ const getMenuItems = (role) => {
     { text: 'Courses', icon: <School />, path: '/courses' },
     { text: 'Subjects', icon: <MenuBook />, path: '/subjects' },
     { text: 'Exams', icon: <GradeRounded />, path: '/exams' },
+    { text: 'Assignments', icon: <Assignment />, path: '/assignments' },
     { text: 'Results', icon: <Assessment />, path: '/results' },
     { text: 'Timetable', icon: <EventNote />, path: '/timetable' },
     { text: 'Library', icon: <LibraryBooks />, path: '/library' },

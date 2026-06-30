@@ -41,6 +41,7 @@ const ExamManagerPage = lazy(() => import('./pages/teacher/ExamManagerPage'));
 const ResultEntryPage = lazy(() => import('./pages/teacher/ResultEntryPage'));
 const LessonPlannerPage = lazy(() => import('./pages/teacher/LessonPlannerPage'));
 const AISummaryPage = lazy(() => import('./pages/teacher/AISummaryPage'));
+const TeacherAssignmentsPage = lazy(() => import('./pages/teacher/TeacherAssignmentsPage'));
 
 // Lazy-loaded Student pages
 const CourseDetailsPage = lazy(() => import('./pages/student/CourseDetailsPage'));
@@ -48,6 +49,7 @@ const StudyMaterialsPage = lazy(() => import('./pages/student/StudyMaterialsPage
 const StudentAttendancePage = lazy(() => import('./pages/student/StudentAttendancePage'));
 const StudentResultsPage = lazy(() => import('./pages/student/StudentResultsPage'));
 const StudentExamsPage = lazy(() => import('./pages/student/StudentExamsPage'));
+const StudentAssignmentsPage = lazy(() => import('./pages/student/StudentAssignmentsPage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -83,6 +85,15 @@ function ExamsRoute() {
     return <StudentExamsPage />;
   }
   return <ExamManagerPage />;
+}
+
+// Dynamic role-based router for Assignments page
+function AssignmentsRoute() {
+  const { user } = useAuth();
+  if (user?.role === 'student') {
+    return <StudentAssignmentsPage />;
+  }
+  return <TeacherAssignmentsPage />;
 }
 
 // Feature page wrapper for remaining stubs
@@ -152,6 +163,7 @@ export default function App() {
                     <Route path="/attendance" element={<AttendanceRoute />} />
                     <Route path="/results" element={<ResultsRoute />} />
                     <Route path="/exams" element={<ExamsRoute />} />
+                    <Route path="/assignments" element={<AssignmentsRoute />} />
 
                     {/* Teacher specific routes */}
                     <Route path="/lesson-plans" element={<ProtectedRoute roles={['teacher', 'admin']}><LessonPlannerPage /></ProtectedRoute>} />

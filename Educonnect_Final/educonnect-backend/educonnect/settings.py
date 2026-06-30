@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'apps.timetables',
     'apps.lesson_plans',
     'apps.library',
+    'apps.assignments',
 ]
 
 MIDDLEWARE = [

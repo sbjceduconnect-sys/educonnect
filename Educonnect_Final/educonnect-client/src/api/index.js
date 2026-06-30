@@ -61,6 +61,19 @@ export const materialApi = {
   listQuestionPapers: (params) => api.get('/materials/question-papers', { params }),
 };
 
+export const assignmentApi = {
+  list: (params) => api.get('/assignments', { params }),
+  get: (id) => api.get(`/assignments/${id}`),
+  create: (formData) => api.post('/assignments', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  update: (id, data) => api.put(`/assignments/${id}`, data),
+  delete: (id) => api.delete(`/assignments/${id}`),
+  submit: (id, formData) => api.post(`/assignments/${id}/submit`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  getSubmissions: (id) => api.get(`/assignments/${id}/submissions`),
+  gradeSubmission: (subId, data) => api.patch(`/submissions/${subId}/grade`, data),
+  downloadAssignmentFile: (id) => api.get(`/assignments/${id}/download`, { responseType: 'blob' }),
+  downloadSubmissionFile: (subId) => api.get(`/submissions/${subId}/download`, { responseType: 'blob' }),
+};
+
 export const attendanceApi = {
   list: (params) => api.get('/attendance', { params }),
   mark: (data) => api.post('/attendance', data),
