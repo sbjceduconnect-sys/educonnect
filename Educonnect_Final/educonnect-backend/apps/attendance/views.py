@@ -28,6 +28,7 @@ class AttendanceView(APIView):
         subject_id = request.data.get('subject_id') or request.data.get('subjectId')
         date = request.data.get('date')
         records = request.data.get('records', [])
+        is_draft = request.data.get('is_draft') or request.data.get('isDraft') or False
         
         if not course_id or not subject_id or not date:
             return api_error("course_id, subject_id, and date are required.", status=400)
@@ -55,7 +56,9 @@ class AttendanceView(APIView):
             ).first()
 
             if existing:
-                if not is_admin:
+                # If the existing record is a draft, standard users (teachers) CAN edit it
+                # If it's NOT a draft, only admin can edit it directly
+                if not existing.is_draft and not is_admin:
                     # If status is modified, standard users (teachers) cannot update locked record!
                     if existing.status.capitalize() != db_status:
                         return api_error(
@@ -65,6 +68,7 @@ class AttendanceView(APIView):
                     continue
                 else:
                     existing.status = db_status
+                    existing.is_draft = is_draft
                     existing.marked_by = request.user
                     existing.save()
                     created.append(existing)
@@ -76,13 +80,14 @@ class AttendanceView(APIView):
                     date=date,
                     status=db_status,
                     marked_by=request.user,
-                    method='manual'
+                    method='manual',
+                    is_draft=is_draft
                 )
                 created.append(obj)
                 
         return api_success(
             data={"submitted": len(created)},
-            message=f"Attendance saved for {len(created)} students.",
+            message=f"Attendance saved as {'Draft' if is_draft else 'Final'} for {len(created)} students.",
             status=201,
         )
 

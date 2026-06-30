@@ -210,7 +210,7 @@ export default function AttendanceMarkerPage() {
   };
 
   // Submit manual attendance
-  const handleSubmitManual = async () => {
+  const handleSubmitManual = async (isDraft = false) => {
     if (!selectedCourseId) {
       toast.error('Please select a course');
       return;
@@ -221,7 +221,7 @@ export default function AttendanceMarkerPage() {
     }
     const recordsArray = Object.keys(attendanceRecords).map((studentId) => ({
       studentId,
-      status: attendanceRecords[studentId],
+      status: attendanceRecords[studentId] || 'absent',
     }));
 
     try {
@@ -231,9 +231,11 @@ export default function AttendanceMarkerPage() {
         subjectId: selectedSubjectId,
         date: attendanceDate,
         records: recordsArray,
+        isDraft: isDraft,
       });
 
-      toast.success('Attendance records saved successfully!');
+      toast.success(isDraft ? 'Attendance draft saved successfully!' : 'Attendance records submitted and locked successfully!');
+      loadAttendanceStates();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to submit attendance');
     }
@@ -563,7 +565,7 @@ export default function AttendanceMarkerPage() {
                     {students.map((student) => {
                       const dbRec = dbRecords[student.id];
                       const pendingReq = pendingRequests[student.id];
-                      const isLocked = !!dbRec && user?.role !== 'admin';
+                      const isLocked = !!dbRec && !dbRec.isDraft && user?.role !== 'admin';
 
                       return (
                         <TableRow key={student.id} hover>
@@ -592,21 +594,27 @@ export default function AttendanceMarkerPage() {
                             </RadioGroup>
                           </TableCell>
                           <TableCell align="center">
-                            {isLocked ? (
+                            {dbRec ? (
                               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                                {pendingReq ? (
-                                  <Chip label="Pending Approval" color="warning" size="small" variant="outlined" sx={{ fontWeight: 600 }} />
+                                {dbRec.isDraft ? (
+                                  <Chip label="Draft" color="warning" size="small" variant="outlined" sx={{ fontWeight: 600 }} />
+                                ) : isLocked ? (
+                                  pendingReq ? (
+                                    <Chip label="Pending Approval" color="warning" size="small" variant="outlined" sx={{ fontWeight: 600 }} />
+                                  ) : (
+                                    <>
+                                      <Chip label="Locked" icon={<Lock sx={{ fontSize: '0.9rem' }} />} size="small" variant="outlined" sx={{ fontWeight: 600 }} />
+                                      <Button variant="contained" size="small" color="primary" onClick={() => handleOpenEditDialog(student)} sx={{ textTransform: 'none', borderRadius: '6px', fontSize: '0.75rem', py: 0.2 }}>
+                                        Request Edit
+                                      </Button>
+                                    </>
+                                  )
                                 ) : (
-                                  <>
-                                    <Chip label="Locked" icon={<Lock sx={{ fontSize: '0.9rem' }} />} size="small" variant="outlined" sx={{ fontWeight: 600 }} />
-                                    <Button variant="contained" size="small" color="primary" onClick={() => handleOpenEditDialog(student)} sx={{ textTransform: 'none', borderRadius: '6px', fontSize: '0.75rem', py: 0.2 }}>
-                                      Request Edit
-                                    </Button>
-                                  </>
+                                  <Chip label="Submitted" color="success" size="small" variant="outlined" sx={{ fontWeight: 600 }} />
                                 )}
                               </Box>
                             ) : (
-                              <Typography variant="caption" color="text.secondary">Draft</Typography>
+                              <Typography variant="caption" color="text.secondary">-</Typography>
                             )}
                           </TableCell>
                         </TableRow>
@@ -619,10 +627,24 @@ export default function AttendanceMarkerPage() {
 
             <Divider />
 
-            <Box sx={{ p: 3, display: 'flex', justifyContent: 'flex-end' }}>
+            <Box sx={{ p: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+              <Button
+                variant="outlined"
+                color="warning"
+                onClick={() => handleSubmitManual(true)}
+                disabled={students.length === 0}
+                sx={{
+                  borderRadius: '10px',
+                  px: 4,
+                  py: 1.2,
+                  fontWeight: 600
+                }}
+              >
+                Save as Draft
+              </Button>
               <Button
                 variant="contained"
-                onClick={handleSubmitManual}
+                onClick={() => handleSubmitManual(false)}
                 disabled={students.length === 0}
                 startIcon={<CheckCircle />}
                 sx={{

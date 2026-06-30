@@ -96,7 +96,7 @@ class BookIssueView(APIView):
         book.available_copies -= 1
         book.save()
         
-        due_date = date.today() + timedelta(days=14)
+        due_date = date.today() + timedelta(days=7)
         txn = BookTransaction.objects.create(
             book=book,
             student_id=user_id,

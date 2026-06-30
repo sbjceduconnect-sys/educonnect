@@ -41,6 +41,16 @@ import toast from 'react-hot-toast';
 
 const CATEGORIES = ['Reference', 'Textbook', 'Science', 'Commerce', 'Arts', 'Fiction', 'Biography'];
 
+const formatLibraryDate = (dateVal) => {
+  if (!dateVal) return '';
+  const date = new Date(dateVal._seconds ? dateVal._seconds * 1000 : dateVal);
+  if (isNaN(date.getTime())) return '';
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
 export default function LibraryPage() {
   const { user, accessToken } = useAuth();
   const isAdmin = user?.role === 'admin';
@@ -466,8 +476,8 @@ export default function LibraryPage() {
                     </TableHead>
                     <TableBody>
                       {borrowedBooks.map((txn) => {
-                        const issueDateStr = txn.issueDate ? new Date(txn.issueDate._seconds ? txn.issueDate._seconds * 1000 : txn.issueDate).toLocaleDateString() : '';
-                        const dueDateStr = txn.dueDate ? new Date(txn.dueDate._seconds ? txn.dueDate._seconds * 1000 : txn.dueDate).toLocaleDateString() : '';
+                        const issueDateStr = formatLibraryDate(txn.issueDate);
+                        const dueDateStr = formatLibraryDate(txn.dueDate);
                         return (
                           <TableRow key={txn.id}>
                             <TableCell></TableCell>
@@ -569,7 +579,7 @@ export default function LibraryPage() {
                         </TableHead>
                         <TableBody>
                           {transactions.filter(t => t.status === 'issued').map((txn) => {
-                            const dueDateStr = txn.dueDate ? new Date(txn.dueDate._seconds ? txn.dueDate._seconds * 1000 : txn.dueDate).toLocaleDateString() : '';
+                            const dueDateStr = formatLibraryDate(txn.dueDate);
                             return (
                               <TableRow key={txn.id}>
                                 <TableCell sx={{ fontWeight: 600 }}>{getUserDetails(txn.userId)}</TableCell>
@@ -623,8 +633,8 @@ export default function LibraryPage() {
                     </TableHead>
                     <TableBody>
                       {transactions.map((txn) => {
-                        const issueDateStr = txn.issueDate ? new Date(txn.issueDate._seconds ? txn.issueDate._seconds * 1000 : txn.issueDate).toLocaleDateString() : '';
-                        const returnDateStr = txn.returnDate ? new Date(txn.returnDate._seconds ? txn.returnDate._seconds * 1000 : txn.returnDate).toLocaleDateString() : '—';
+                        const issueDateStr = formatLibraryDate(txn.issueDate);
+                        const returnDateStr = formatLibraryDate(txn.returnDate) || '—';
                         return (
                           <TableRow key={txn.id}>
                             <TableCell sx={{ fontWeight: 600 }}>{getUserDetails(txn.userId)}</TableCell>

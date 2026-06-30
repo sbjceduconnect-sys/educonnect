@@ -20,6 +20,7 @@ class AttendanceRecord(models.Model):
     status  = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Absent')
     method  = models.CharField(max_length=10, choices=METHOD_CHOICES, default='manual')
     marked_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='marked_attendance')
+    is_draft = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
