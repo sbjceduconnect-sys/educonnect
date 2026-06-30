@@ -64,6 +64,7 @@ export default function TeacherAssignmentsPage() {
     subjectId: '',
     dueDate: '',
     maxMarks: 100,
+    removeFile: false,
   });
   const [uploadFile, setUploadFile] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -123,6 +124,7 @@ export default function TeacherAssignmentsPage() {
       subjectId: '',
       dueDate: '',
       maxMarks: 100,
+      removeFile: false,
     });
     setOpenDialog(true);
   };
@@ -139,8 +141,22 @@ export default function TeacherAssignmentsPage() {
       subjectId: assignment.subjectId || '',
       dueDate: formattedDate,
       maxMarks: assignment.maxMarks,
+      removeFile: false,
     });
     setOpenDialog(true);
+  };
+
+  const handleDownloadAttachment = async (assignmentId, originalFileUrl) => {
+    try {
+      setAuthHeader(accessToken);
+      const res = await assignmentApi.downloadAssignmentFile(assignmentId);
+      const filename = originalFileUrl ? originalFileUrl.split('/').pop().split('?')[0] : `assignment_${assignmentId}_guidelines.pdf`;
+      downloadBlob(res.data, filename);
+      toast.success('Download started!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to download file');
+    }
   };
 
   const handleDeleteTrigger = (assignment) => {
@@ -161,13 +177,17 @@ export default function TeacherAssignmentsPage() {
       const uploadData = new FormData();
       if (uploadFile) {
         uploadData.append('file', uploadFile);
+      } else if (formData.removeFile) {
+        uploadData.append('file', '');
       }
       uploadData.append('title', formData.title);
       uploadData.append('description', formData.description);
       uploadData.append('courseId', formData.courseId);
       uploadData.append('subjectId', formData.subjectId);
       uploadData.append('dueDate', new Date(formData.dueDate).toISOString());
-      uploadData.append('maxMarks', formData.maxMarks);
+      
+      const parsedMaxMarks = formData.maxMarks === '' ? 100 : parseInt(formData.maxMarks) || 100;
+      uploadData.append('maxMarks', parsedMaxMarks);
 
       setAuthHeader(accessToken);
       if (selectedAssignment) {
@@ -346,6 +366,22 @@ export default function TeacherAssignmentsPage() {
                       <Typography variant="caption" color="text.secondary">
                         Max Marks: <strong>{item.maxMarks} points</strong>
                       </Typography>
+                      {item.file && (
+                        <Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
+                          <Typography variant="caption" color="text.secondary">
+                            Attachment:
+                          </Typography>
+                          <Button
+                            size="small"
+                            variant="text"
+                            startIcon={<CloudDownload sx={{ fontSize: '14px' }} />}
+                            onClick={() => handleDownloadAttachment(item.id, item.file)}
+                            sx={{ p: 0, minWidth: 0, textTransform: 'none', fontSize: '11px', fontWeight: 700, display: 'inline-flex', verticalAlign: 'middle' }}
+                          >
+                            {item.file.split('/').pop().split('?')[0]}
+                          </Button>
+                        </Box>
+                      )}
                     </Box>
                   </Box>
 
@@ -450,7 +486,7 @@ export default function TeacherAssignmentsPage() {
               label="Max Marks"
               type="number"
               value={formData.maxMarks}
-              onChange={(e) => setFormData({ ...formData, maxMarks: parseInt(e.target.value) || 100 })}
+              onChange={(e) => setFormData({ ...formData, maxMarks: e.target.value })}
               required
               fullWidth
               sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
@@ -466,12 +502,47 @@ export default function TeacherAssignmentsPage() {
               />
               <label htmlFor="assignment-file-upload">
                 <Button variant="contained" component="span" startIcon={<UploadFile />} sx={{ borderRadius: '8px', mb: 1 }}>
-                  Upload Prompt/Template File
+                  {selectedAssignment?.file ? 'Replace Prompt/Template File' : 'Upload Prompt/Template File'}
                 </Button>
               </label>
               <Typography variant="body2" color="text.secondary">
-                {uploadFile ? `Selected: ${uploadFile.name}` : 'Select PDF or Document for guidelines'}
+                {uploadFile 
+                  ? `Selected: ${uploadFile.name}` 
+                  : selectedAssignment?.file 
+                    ? `Current File: ${selectedAssignment.file.split('/').pop().split('?')[0]}` 
+                    : 'Select PDF or Document for guidelines'
+                }
               </Typography>
+              {selectedAssignment?.file && !uploadFile && (
+                <Box sx={{ mt: 1.5, display: 'flex', justifyContent: 'center', gap: 1 }}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<CloudDownload />}
+                    onClick={() => handleDownloadAttachment(selectedAssignment.id, selectedAssignment.file)}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    Download
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="error"
+                    onClick={() => {
+                      setFormData({ ...formData, removeFile: true });
+                      toast.success('Current file marked for removal. Save changes to apply.');
+                    }}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    Remove File
+                  </Button>
+                </Box>
+              )}
+              {formData.removeFile && (
+                <Typography variant="caption" color="error" sx={{ display: 'block', mt: 1 }}>
+                  File will be removed upon saving.
+                </Typography>
+              )}
             </Card>
 
           </DialogContent>
