@@ -234,8 +234,8 @@ export default function LibraryPage() {
     setActionLoading(true);
     try {
       setAuthHeader(accessToken);
-      await libraryApi.issueBook(issueForm);
-      toast.success('Book issued successfully');
+      const res = await libraryApi.issueBook(issueForm);
+      toast.success(res.data?.message || 'Book issued successfully');
       setOpenIssueDialog(false);
       fetchData();
     } catch (err) {

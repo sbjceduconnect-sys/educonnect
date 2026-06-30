@@ -97,13 +97,14 @@ class BookIssueView(APIView):
         book.save()
         
         due_date = date.today() + timedelta(days=7)
+        due_date_str = due_date.strftime('%d/%m/%Y')
         txn = BookTransaction.objects.create(
             book=book,
             student_id=user_id,
             due_date=due_date,
             status='issued'
         )
-        return api_success(data=BookTransactionSerializer(txn).data, message="Book issued successfully.", status=201)
+        return api_success(data=BookTransactionSerializer(txn).data, message=f"Book issued successfully. Due Date: {due_date_str}", status=201)
 
 
 class BookReturnView(APIView):
