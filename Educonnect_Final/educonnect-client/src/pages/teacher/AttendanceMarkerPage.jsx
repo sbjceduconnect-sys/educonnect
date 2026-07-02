@@ -33,7 +33,7 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material';
-import { CheckCircle, QrCode, People, Timer, Refresh, History, Delete, Lock, Visibility } from '@mui/icons-material';
+import { CheckCircle, QrCode, People, Timer, Refresh, History, Delete, Lock, Visibility, Save } from '@mui/icons-material';
 import { QRCode } from 'react-qr-code';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { useAuth } from '../../contexts/AuthContext';

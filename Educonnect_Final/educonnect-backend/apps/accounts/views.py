@@ -448,13 +448,19 @@ class TeacherDashboardView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        from apps.subjects.models import Subject
         from apps.courses.models import Course
         from apps.announcements.models import Announcement
         
         teacher = request.user
-        courses = Course.objects.filter(teacher=teacher)
+        subjects = Subject.objects.filter(teacher=teacher)
+        course_ids = subjects.values_list('course_id', flat=True).distinct()
+        courses = Course.objects.filter(id__in=course_ids)
+        if not courses.exists():
+            courses = Course.objects.all()
+
         total_students = User.objects.filter(enrolled_courses__in=courses).distinct().count()
-        announcements = Announcement.objects.all()
+        announcements = Announcement.objects.all().order_by('-created_at')[:5]
         
         serialized_courses = []
         for course in courses:
@@ -466,7 +472,8 @@ class TeacherDashboardView(APIView):
             })
             
         return api_success(data={
-            "totalCourses": courses.count(),
+            "totalCourses": subjects.count(),
+            "totalSubjects": subjects.count(),
             "totalStudents": total_students,
             "courses": serialized_courses,
             "announcements": list(announcements.values('id', 'title', 'created_at'))

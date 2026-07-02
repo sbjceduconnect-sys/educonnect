@@ -168,10 +168,7 @@ export default function AttendanceReportsPage() {
       
       const params = {};
       if (selectedCourseId) {
-        const course = courses.find(c => c.id === selectedCourseId);
-        if (course?.departmentId) {
-          params.departmentId = course.departmentId;
-        }
+        params.courseId = selectedCourseId;
       }
       if (selectedSubjectId) {
         params.subjectId = selectedSubjectId;
@@ -190,10 +187,10 @@ export default function AttendanceReportsPage() {
   };
 
   useEffect(() => {
-    if (accessToken && courses.length > 0) {
+    if (accessToken) {
       fetchReports();
     }
-  }, [accessToken, selectedCourseId, selectedSubjectId, startDate, endDate, courses]);
+  }, [accessToken, selectedCourseId, selectedSubjectId, startDate, endDate]);
 
   const handleOpenDetail = (session) => {
     setSelectedSession(session);
@@ -246,6 +243,10 @@ export default function AttendanceReportsPage() {
       field: 'rate',
       headerName: 'Attendance Rate',
       flex: 1,
+      valueGetter: ({ row }) => {
+        const rate = row.totalCount > 0 ? (row.presentCount / row.totalCount) * 100 : 0;
+        return `${rate.toFixed(1)}% (${row.presentCount}/${row.totalCount})`;
+      },
       renderCell: ({ row }) => {
         const rate = row.totalCount > 0 ? (row.presentCount / row.totalCount) * 100 : 0;
         let color = 'error';
@@ -267,6 +268,7 @@ export default function AttendanceReportsPage() {
       headerName: 'Actions',
       flex: 0.8,
       sortable: false,
+      exportable: false,
       renderCell: ({ row }) => (
         <Box sx={{ display: 'flex', gap: 1 }}>
           <IconButton color="primary" onClick={() => handleOpenDetail(row)} size="small" title="View Student Checklist">

@@ -8,6 +8,8 @@ class Exam(models.Model):
         ('mid', 'mid'),
         ('final', 'final'),
         ('quiz', 'quiz'),
+        ('weekly', 'weekly'),
+        ('Weekly Test', 'Weekly Test'),
         ('assignment', 'assignment'),
         ('practical', 'practical'),
     ]

@@ -58,7 +58,7 @@ export default function DataTable({
     if (filteredRows.length === 0) return;
 
     // Filter columns to only visible/exportable ones
-    const exportCols = columns.filter((col) => col.field && col.field !== '__check__' && col.headerName);
+    const exportCols = columns.filter((col) => col.field && col.field !== '__check__' && col.field !== 'actions' && col.exportable !== false && col.headerName);
     
     // Format data for sheet
     const data = filteredRows.map((row) => {

@@ -252,10 +252,13 @@ class AttendanceReportsView(APIView):
     def get(self, request):
         qs = AttendanceRecord.objects.all()
         
+        course_id = request.query_params.get('courseId') or request.query_params.get('course_id') or request.query_params.get('course')
         subject_id = request.query_params.get('subjectId') or request.query_params.get('subject_id')
         start_date = request.query_params.get('startDate') or request.query_params.get('start_date')
         end_date = request.query_params.get('endDate') or request.query_params.get('end_date')
         
+        if course_id:
+            qs = qs.filter(course_id=course_id)
         if subject_id:
             qs = qs.filter(subject_id=subject_id)
         if start_date:
