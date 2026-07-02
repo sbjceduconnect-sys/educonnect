@@ -233,13 +233,12 @@ export default function AnnouncementPage() {
   const formatAnnouncementDate = (dateString) => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString(undefined, {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
+      if (isNaN(date.getTime())) return dateString || 'Recent';
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      const time = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      return `${day}/${month}/${year}, ${time}`;
     } catch (e) {
       return dateString || 'Recent';
     }

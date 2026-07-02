@@ -266,7 +266,6 @@ export default function CourseDetailsPage() {
     { field: 'courseCode', headerName: 'Code', flex: 0.8, renderCell: ({ value }) => <Chip label={value} size="small" variant="outlined" sx={{ fontWeight: 700 }} /> },
     { field: 'title', headerName: 'Course Title', flex: 1.2, renderCell: ({ row }) => <Typography sx={{ fontWeight: 600 }}>{row.title}</Typography> },
     { field: 'departmentId', headerName: 'Stream/Dept', flex: 1.2, valueGetter: ({ row }) => getDeptName(row.departmentId) },
-    { field: 'teacherId', headerName: 'Teacher', flex: 1.2, valueGetter: ({ row }) => getTeacherName(row.teacherId) },
     {
       field: 'enrolled',
       headerName: 'Students Enrolled',
@@ -351,22 +350,6 @@ export default function CourseDetailsPage() {
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                       Stream: {getDeptName(course.departmentId)}
                     </Typography>
-                    
-                    <Divider sx={{ my: 1.5 }} />
-
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                      <Avatar sx={{ width: 32, height: 32, fontSize: '0.8rem', background: 'linear-gradient(135deg, #6C63FF, #3F51B5)' }}>
-                        <Person fontSize="small" />
-                      </Avatar>
-                      <Box>
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                          Instructor
-                        </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {getTeacherName(course.teacherId)}
-                        </Typography>
-                      </Box>
-                    </Box>
                   </Box>
 
                   {isTeacher && (
@@ -444,26 +427,7 @@ export default function CourseDetailsPage() {
               </Select>
               {formErrors.departmentId && <FormHelperText>{formErrors.departmentId}</FormHelperText>}
             </FormControl>
-            <FormControl fullWidth required error={!!formErrors.teacherId}>
-              <InputLabel id="select-teacher-label">Assigned Teacher</InputLabel>
-              <Select
-                labelId="select-teacher-label"
-                value={formData.teacherId}
-                label="Assigned Teacher"
-                onChange={(e) => {
-                  setFormData({ ...formData, teacherId: e.target.value });
-                  setFormErrors({ ...formErrors, teacherId: null });
-                }}
-                sx={{ borderRadius: '10px' }}
-              >
-                {teachers.map((teacher) => (
-                  <MenuItem key={teacher.id} value={teacher.id}>
-                    {teacher.firstName} {teacher.lastName}
-                  </MenuItem>
-                ))}
-              </Select>
-              {formErrors.teacherId && <FormHelperText>{formErrors.teacherId}</FormHelperText>}
-            </FormControl>
+
             <TextField
               label="Academic Year"
               value={formData.academicYear}

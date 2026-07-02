@@ -538,7 +538,7 @@ export default function SettingsPage() {
                         </Grid>
                         <Grid item xs={8}>
                           <Typography variant="body2" color="text.secondary">
-                            {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                            {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-GB') : 'N/A'}
                           </Typography>
                         </Grid>
                       </Grid>

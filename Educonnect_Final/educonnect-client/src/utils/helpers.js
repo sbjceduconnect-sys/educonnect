@@ -5,14 +5,14 @@ import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import toast from 'react-hot-toast';
 
-export function formatDate(date, format = 'DD MMM YYYY') {
+export function formatDate(date, format = 'DD/MM/YYYY') {
   if (!date) return 'N/A';
   const d = date?._seconds ? new Date(date._seconds * 1000) : new Date(date);
   return dayjs(d).format(format);
 }
 
 export function formatDateTime(date) {
-  return formatDate(date, 'DD MMM YYYY, hh:mm A');
+  return formatDate(date, 'DD/MM/YYYY, hh:mm A');
 }
 
 export function getInitials(firstName, lastName) {

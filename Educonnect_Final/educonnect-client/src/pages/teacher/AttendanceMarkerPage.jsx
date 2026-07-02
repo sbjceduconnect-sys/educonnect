@@ -183,7 +183,11 @@ export default function AttendanceMarkerPage() {
   }, [qrTimer, qrToken]);
 
   const selectedCourse = courses.find((c) => c.id === selectedCourseId);
-  const filteredSubjects = subjects.filter((s) => s.departmentId === selectedCourse?.departmentId);
+  const filteredSubjects = subjects.filter((s) => {
+    const matchesDept = !selectedCourse || s.departmentId === selectedCourse?.departmentId;
+    const matchesTeacher = user?.role !== 'teacher' || String(s.teacherId) === String(user.id);
+    return matchesDept && matchesTeacher;
+  });
 
   // Auto-select subject if there's only one matching
   useEffect(() => {
@@ -798,7 +802,7 @@ export default function AttendanceMarkerPage() {
                       const totalCount = record.records?.length || 0;
                       return (
                         <TableRow key={record.id} hover>
-                          <TableCell>{new Date(record.date).toLocaleDateString()}</TableCell>
+                          <TableCell>{new Date(record.date).toLocaleDateString('en-GB')}</TableCell>
                           <TableCell sx={{ textTransform: 'capitalize' }}>
                             <Chip 
                               label={record.method || 'manual'} 
@@ -850,7 +854,7 @@ export default function AttendanceMarkerPage() {
           {selectedStudentForEdit && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, mt: 1 }}>
               <Typography variant="body2">
-                Request modification of attendance for <strong>{selectedStudentForEdit.firstName} {selectedStudentForEdit.lastName}</strong> on {new Date(attendanceDate).toLocaleDateString()}.
+                Request modification of attendance for <strong>{selectedStudentForEdit.firstName} {selectedStudentForEdit.lastName}</strong> on {new Date(attendanceDate).toLocaleDateString('en-GB')}.
               </Typography>
               <FormControl fullWidth>
                 <InputLabel id="new-status-label">Proposed Status</InputLabel>
@@ -898,7 +902,7 @@ export default function AttendanceMarkerPage() {
         <DialogTitle sx={{ fontWeight: 800 }}>
           Daily Attendance Roster
           <Typography variant="caption" display="block" color="text.secondary">
-            Date: {new Date(rosterDate).toLocaleDateString()} | Method: {rosterMethod?.toUpperCase()}
+            Date: {new Date(rosterDate).toLocaleDateString('en-GB')} | Method: {rosterMethod?.toUpperCase()}
           </Typography>
         </DialogTitle>
         <Divider />

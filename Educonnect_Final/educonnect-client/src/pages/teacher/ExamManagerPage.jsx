@@ -159,7 +159,7 @@ export default function ExamManagerPage() {
 
   const getSubjectName = (subjectId) => {
     const s = subjects.find((subj) => subj.id === subjectId);
-    return s ? s.name : 'General';
+    return s ? `${s.name} (${s.code})` : 'General';
   };
 
   const columns = [
@@ -319,9 +319,9 @@ export default function ExamManagerPage() {
                 onChange={(e) => setFormData({ ...formData, subjectId: e.target.value })}
                 sx={{ borderRadius: '10px' }}
               >
-                {subjects.map((subj) => (
+                {subjects.filter(s => user?.role !== 'teacher' || String(s.teacherId) === String(user.id)).map((subj) => (
                   <MenuItem key={subj.id} value={subj.id}>
-                    {subj.name}
+                    {subj.name} ({subj.code})
                   </MenuItem>
                 ))}
               </Select>

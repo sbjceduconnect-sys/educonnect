@@ -14,6 +14,9 @@ class SubjectListView(APIView):
         teacher_id = request.query_params.get('teacher_id') or request.query_params.get('teacherId')
         department_id = request.query_params.get('department_id') or request.query_params.get('departmentId')
         
+        if request.user.role == 'teacher' and not teacher_id:
+            teacher_id = request.user.id
+
         if teacher_id:
             qs = qs.filter(teacher_id=teacher_id)
         if department_id:

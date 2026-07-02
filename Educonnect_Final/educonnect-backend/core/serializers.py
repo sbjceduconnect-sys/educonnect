@@ -12,11 +12,13 @@ class CamelCaseSerializerMixin:
         # Convert incoming keys from camelCase to snake_case
         converted_data = convert_dict_keys(data, camel_to_snake)
         
-        # Normalize empty strings to None for non-string fields or allow_null fields
+        # Normalize empty strings to None for non-string fields or allow_null/optional fields
         for field_name, field in self.fields.items():
-            if field_name in converted_data and converted_data[field_name] == '':
-                if not isinstance(field, (serializers.CharField, serializers.UUIDField)) or field.allow_null:
-                    converted_data[field_name] = None
+            if field_name in converted_data:
+                val = converted_data[field_name]
+                if val in ('', 'null', 'undefined'):
+                    if getattr(field, 'allow_null', False) or not getattr(field, 'required', True) or not isinstance(field, serializers.CharField):
+                        converted_data[field_name] = None
                     
         return super().to_internal_value(converted_data)
 

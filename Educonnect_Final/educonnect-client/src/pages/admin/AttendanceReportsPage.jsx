@@ -237,7 +237,7 @@ export default function AttendanceReportsPage() {
       field: 'date',
       headerName: 'Date',
       flex: 1,
-      valueGetter: ({ row }) => new Date(row.date).toLocaleDateString(),
+      valueGetter: ({ row }) => new Date(row.date).toLocaleDateString('en-GB'),
     },
     { field: 'courseTitle', headerName: 'Class / Course', flex: 1.2 },
     { field: 'subjectName', headerName: 'Subject', flex: 1.2 },
@@ -579,7 +579,7 @@ export default function AttendanceReportsPage() {
 
                           return (
                             <TableRow key={req.id} hover>
-                              <TableCell>{new Date(req.date).toLocaleDateString()}</TableCell>
+                              <TableCell>{new Date(req.date).toLocaleDateString('en-GB')}</TableCell>
                               <TableCell>{req.courseTitle} / {req.subjectName}</TableCell>
                               <TableCell>{req.studentName}</TableCell>
                               <TableCell>{req.requestedByName}</TableCell>
@@ -643,7 +643,7 @@ export default function AttendanceReportsPage() {
                   Attendance Checklist Detail
                 </Typography>
                 <Chip
-                  label={new Date(selectedSession.date).toLocaleDateString()}
+                  label={new Date(selectedSession.date).toLocaleDateString('en-GB')}
                   color="primary"
                   variant="outlined"
                   size="small"

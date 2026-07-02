@@ -15,13 +15,11 @@ from .serializers import (
 )
 
 def user_has_access_to_assignment(user, assignment):
-    if user.role == 'admin':
+    if user.role in ('admin', 'teacher'):
         return True
-    if user.role == 'teacher':
-        # Teacher is the creator or teaches the course
-        return assignment.teacher == user or assignment.course.teacher == user
     if user.role == 'student':
-        # Student is enrolled in the course
+        if not assignment.course:
+            return True
         return assignment.course.students.filter(id=user.id).exists()
     return False
 
@@ -219,7 +217,7 @@ class AssignmentFileDownloadView(APIView):
             return api_error("No file attachment found for this assignment.", status=404)
 
         try:
-            file_handle = assignment.file.open()
+            file_handle = open(assignment.file.path, 'rb')
             response = FileResponse(file_handle, content_type='application/octet-stream')
             filename = os.path.basename(assignment.file.name)
             response['Content-Disposition'] = f'attachment; filename="{filename}"'
@@ -240,17 +238,12 @@ class SubmissionFileDownloadView(APIView):
         # Access check: student can download their own submission, teachers/admins can download any submission
         if request.user.role == 'student' and submission.student != request.user:
             return api_error("You do not have access to this submission file.", status=403)
-        elif request.user.role == 'teacher':
-            # Check if teacher teaches the assignment course
-            assignment = submission.assignment
-            if assignment.teacher != request.user and assignment.course.teacher != request.user:
-                return api_error("You do not have access to download this student's submission.", status=403)
 
         if not submission.file:
             return api_error("Submission file not found.", status=404)
 
         try:
-            file_handle = submission.file.open()
+            file_handle = open(submission.file.path, 'rb')
             response = FileResponse(file_handle, content_type='application/octet-stream')
             filename = os.path.basename(submission.file.name)
             response['Content-Disposition'] = f'attachment; filename="{filename}"'

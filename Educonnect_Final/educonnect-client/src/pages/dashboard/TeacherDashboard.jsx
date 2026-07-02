@@ -59,7 +59,7 @@ export default function TeacherDashboard() {
       <PageHeader title="Teacher Dashboard" subtitle="Manage your courses and students" />
 
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={4}><StatCard title="My Courses" value={data?.totalCourses || 0} icon={<School />} color="purple" delay={0} /></Grid>
+        <Grid item xs={12} sm={4}><StatCard title="My Subjects" value={data?.totalCourses || 0} icon={<School />} color="purple" delay={0} /></Grid>
         <Grid item xs={12} sm={4}><StatCard title="Total Students" value={data?.totalStudents || 0} icon={<People />} color="blue" delay={0.1} /></Grid>
         <Grid item xs={12} sm={4}><StatCard title="Announcements" value={data?.announcements?.length || 0} icon={<Announcement />} color="orange" delay={0.2} /></Grid>
       </Grid>

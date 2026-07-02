@@ -182,8 +182,8 @@ export default function TeacherAssignmentsPage() {
       }
       uploadData.append('title', formData.title);
       uploadData.append('description', formData.description);
-      uploadData.append('courseId', formData.courseId);
-      uploadData.append('subjectId', formData.subjectId);
+      if (formData.courseId) uploadData.append('courseId', formData.courseId);
+      if (formData.subjectId) uploadData.append('subjectId', formData.subjectId);
       uploadData.append('dueDate', new Date(formData.dueDate).toISOString());
       
       const parsedMaxMarks = formData.maxMarks === '' ? 100 : parseInt(formData.maxMarks) || 100;
@@ -299,7 +299,7 @@ export default function TeacherAssignmentsPage() {
 
   const getSubjectName = (subjectId) => {
     const s = subjects.find((subj) => subj.id === subjectId);
-    return s ? s.name : 'General Subject';
+    return s ? `${s.name} (${s.code})` : 'General Subject';
   };
 
   return (
@@ -463,9 +463,9 @@ export default function TeacherAssignmentsPage() {
                 sx={{ borderRadius: '10px' }}
               >
                 <MenuItem value="">None</MenuItem>
-                {subjects.map((subj) => (
+                {subjects.filter(s => user?.role !== 'teacher' || String(s.teacherId) === String(user.id)).map((subj) => (
                   <MenuItem key={subj.id} value={subj.id}>
-                    {subj.name}
+                    {subj.name} ({subj.code})
                   </MenuItem>
                 ))}
               </Select>

@@ -11,7 +11,11 @@ def student_has_access_to_material(user, material):
     if user.role != 'student':
         return True
     
-    # Check if student is explicitly enrolled in the material's course
+    # General materials with no specific course/subject
+    if not material.course and not material.subject:
+        return True
+
+    # Check if student is explicitly enrolled in the material's course or matches stream
     if material.course:
         is_enrolled = material.course.students.filter(id=user.id).exists()
         matches_stream = False
@@ -21,24 +25,16 @@ def student_has_access_to_material(user, material):
             course_code = material.course.code.strip().lower()
             matches_stream = (user_stream == course_name or user_stream == course_code)
         
-        if not (is_enrolled or matches_stream):
-            return False
+        if is_enrolled or matches_stream:
+            return True
             
-    # Also verify department check (principle of least privilege)
+    # Check department alignment
     dept_id = user.department_id
     if dept_id:
-        if material.course and material.course.department_id:
-            if material.course.department_id != dept_id:
-                return False
-        if material.subject and material.subject.department_id:
-            if material.subject.department_id != dept_id:
-                return False
-    else:
-        # Student has no department, only allow general materials (no department)
-        if material.course and material.course.department_id:
-            return False
-        if material.subject and material.subject.department_id:
-            return False
+        if material.course and material.course.department_id and material.course.department_id == dept_id:
+            return True
+        if material.subject and material.subject.department_id and material.subject.department_id == dept_id:
+            return True
             
     return True
 
@@ -154,13 +150,15 @@ class StudyMaterialDownloadView(APIView):
                 return api_error("You do not have permission to download this resource.", status=403)
             if not obj.file:
                 return api_error("File not found on disk.", status=404)
-            file_handle = obj.file.open()
+            file_handle = open(obj.file.path, 'rb')
             response = FileResponse(file_handle, content_type='application/octet-stream')
             filename = os.path.basename(obj.file.name)
             response['Content-Disposition'] = f'attachment; filename="{filename}"'
             return response
         except StudyMaterial.DoesNotExist:
             return api_error("Study material not found.", status=404)
+        except Exception as e:
+            return api_error("Failed to read file from disk.", status=500)
 
 
 class QuestionPapersListView(APIView):

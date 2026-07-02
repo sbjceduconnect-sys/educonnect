@@ -9,10 +9,12 @@ class ExamSerializer(CamelCaseSerializer):
     subject_id = serializers.PrimaryKeyRelatedField(queryset=Subject.objects.all(), source='subject', required=False, allow_null=True)
     exam_date = serializers.DateField(source='date')
     exam_type = serializers.CharField(source='type', required=False)
+    subject_code = serializers.CharField(source='subject.code', read_only=True, default='')
+    subject_name = serializers.CharField(source='subject.name', read_only=True, default='')
 
     class Meta:
         model = Exam
-        fields = ['id', 'title', 'course_id', 'subject_id', 'exam_date', 'exam_type', 'duration', 'max_marks', 'academic_year']
+        fields = ['id', 'title', 'course_id', 'subject_id', 'exam_date', 'exam_type', 'duration', 'max_marks', 'academic_year', 'subject_code', 'subject_name']
         read_only_fields = ['created_at']
 
 

@@ -285,7 +285,7 @@ export default function StudentAttendancePage() {
                           <ListItemText
                             primary={
                               <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                Session: {new Date(log.date).toLocaleDateString()}
+                                Session: {new Date(log.date).toLocaleDateString('en-GB')}
                               </Typography>
                             }
                             secondary={`Subject/Course: ${log.subjectId || 'N/A'}`}

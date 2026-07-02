@@ -179,8 +179,8 @@ export default function StudyMaterialsPage() {
       uploadData.append('material', uploadFile);
       uploadData.append('title', formData.title);
       uploadData.append('description', formData.description);
-      uploadData.append('courseId', formData.courseId);
-      uploadData.append('subjectId', formData.subjectId);
+      if (formData.courseId) uploadData.append('courseId', formData.courseId);
+      if (formData.subjectId) uploadData.append('subjectId', formData.subjectId);
       uploadData.append('type', formData.type);
 
       setAuthHeader(accessToken);
@@ -241,7 +241,7 @@ export default function StudyMaterialsPage() {
 
   const getSubjectName = (subjId) => {
     const s = subjects.find((subj) => subj.id === subjId);
-    return s ? s.name : 'General';
+    return s ? `${s.name} (${s.code})` : 'General';
   };
 
   const getFileIcon = (type) => {
@@ -395,9 +395,9 @@ export default function StudyMaterialsPage() {
                 onChange={(e) => setFormData({ ...formData, subjectId: e.target.value })}
                 sx={{ borderRadius: '10px' }}
               >
-                {subjects.map((subj) => (
+                {subjects.filter(s => !isTeacher || String(s.teacherId) === String(user.id)).map((subj) => (
                   <MenuItem key={subj.id} value={subj.id}>
-                    {subj.name}
+                    {subj.name} ({subj.code})
                   </MenuItem>
                 ))}
               </Select>

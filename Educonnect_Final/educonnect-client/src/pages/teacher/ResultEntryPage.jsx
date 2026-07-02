@@ -245,7 +245,7 @@ export default function ResultEntryPage() {
                 >
                   {exams.map((exam) => (
                     <MenuItem key={exam.id} value={exam.id}>
-                      {exam.title} (Max Marks: {exam.maxMarks})
+                      {exam.title} {exam.subjectCode ? `[${exam.subjectCode}]` : ''} (Max Marks: {exam.maxMarks})
                     </MenuItem>
                   ))}
                 </Select>
