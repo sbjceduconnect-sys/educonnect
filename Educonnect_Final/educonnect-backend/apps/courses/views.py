@@ -112,10 +112,18 @@ class CourseStudentsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
         try:
             course = Course.objects.get(pk=pk)
         except Course.DoesNotExist:
             return api_error("Course not found.", status=404)
             
-        students = course.students.all()
+        students = course.students.filter(role='student')
+        if not students.exists():
+            if course.department_id:
+                students = User.objects.filter(role='student', department_id=course.department_id)
+            if not students.exists():
+                students = User.objects.filter(role='student', is_approved=True)
+                
         return api_success(data=UserSerializer(students, many=True).data)

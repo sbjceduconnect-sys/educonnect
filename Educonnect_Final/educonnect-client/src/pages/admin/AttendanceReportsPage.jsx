@@ -96,7 +96,7 @@ export default function AttendanceReportsPage() {
   };
 
   const fetchDailyRoster = async () => {
-    if (!rosterCourseId || !rosterSubjectId || !rosterDate) return;
+    if (!rosterCourseId || !rosterDate) return;
     setRosterLoading(true);
     try {
       setAuthHeader(accessToken);
