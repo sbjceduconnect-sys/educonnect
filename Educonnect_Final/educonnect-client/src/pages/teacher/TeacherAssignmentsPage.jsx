@@ -47,7 +47,7 @@ import toast from 'react-hot-toast';
 import { formatDate, downloadBlob } from '../../utils/helpers';
 
 export default function TeacherAssignmentsPage() {
-  const { accessToken } = useAuth();
+  const { user, accessToken } = useAuth();
 
   const [assignments, setAssignments] = useState([]);
   const [courses, setCourses] = useState([]);

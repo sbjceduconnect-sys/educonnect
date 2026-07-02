@@ -88,7 +88,6 @@ export default function CourseDetailsPage() {
       setAuthHeader(accessToken);
       // Construct filter params based on role
       const params = {};
-      if (isTeacher) params.teacherId = user.id;
       if (isStudent) params.studentId = user.id; // getEnrolledCourses will be called on backend if studentId is passed
 
       const promises = [
