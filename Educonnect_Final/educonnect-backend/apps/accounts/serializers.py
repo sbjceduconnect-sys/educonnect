@@ -8,10 +8,24 @@ User = get_user_model()
 
 class UserProfileSerializer(CamelCaseSerializer):
     department_id = serializers.IntegerField(required=False, allow_null=True)
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
 
     class Meta:
         model = UserProfile
         exclude = ['user']
+
+    def to_internal_value(self, data):
+        try:
+            data = data.copy()
+        except AttributeError:
+            data = dict(data)
+
+        dob = data.get('dateOfBirth') or data.get('date_of_birth')
+        if not dob or str(dob).strip() in ('', 'null', 'undefined'):
+            data['dateOfBirth'] = None
+            data['date_of_birth'] = None
+
+        return super().to_internal_value(data)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -118,12 +132,14 @@ class RegisterSerializer(CamelCaseSerializer):
             raise serializers.ValidationError({'confirm_password': 'Passwords do not match.'})
 
         role = data.get('role', 'student')
-        code = data.get('institutional_code', '')
+        code = (data.get('institutional_code') or '').strip().upper()
 
-        if role == 'admin' and code != settings.ADMIN_CODE:
-            raise serializers.ValidationError({'institutional_code': 'Invalid admin institutional code.'})
-        if role == 'teacher' and code != settings.TEACHER_CODE:
-            raise serializers.ValidationError({'institutional_code': 'Invalid teacher institutional code.'})
+        if role == 'admin' and code != settings.ADMIN_CODE.strip().upper():
+            raise serializers.ValidationError({'institutional_code': f'Invalid admin code. Code is: {settings.ADMIN_CODE}'})
+        if role == 'teacher' and code != settings.TEACHER_CODE.strip().upper():
+            raise serializers.ValidationError({'institutional_code': f'Invalid teacher code. Code is: {settings.TEACHER_CODE}'})
+
+        return data
 
         return data
 

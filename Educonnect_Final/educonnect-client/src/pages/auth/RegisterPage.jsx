@@ -47,18 +47,44 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // Clean up empty strings in profile before sending payload
+    const cleanedProfile = {};
+    if (formData.profile) {
+      Object.entries(formData.profile).forEach(([k, v]) => {
+        if (v !== '' && v !== null && v !== undefined) {
+          cleanedProfile[k] = v;
+        }
+      });
+    }
+
+    const payload = {
+      ...formData,
+      profile: cleanedProfile,
+    };
+
     try {
-      await register(formData);
+      await register(payload);
       setSuccess('Registration successful! Please wait for admin approval.');
       setTimeout(() => navigate('/login'), 3000);
     } catch (err) {
       const msg = err.response?.data?.message || 'Registration failed';
       const details = err.response?.data?.errors;
-      if (details && Array.isArray(details) && details.length > 0) {
-        setError(`${msg}: ${details.join('; ')}`);
-      } else {
-        setError(msg);
+      let detailedMsg = msg;
+      if (details) {
+        if (Array.isArray(details) && details.length > 0) {
+          detailedMsg += `: ${details.join('; ')}`;
+        } else if (typeof details === 'object') {
+          const formatted = Object.entries(details)
+            .map(([field, fieldErrors]) => {
+              const errStr = Array.isArray(fieldErrors) ? fieldErrors.join(', ') : String(fieldErrors);
+              return `${field}: ${errStr}`;
+            })
+            .join('; ');
+          if (formatted) detailedMsg += `: ${formatted}`;
+        }
       }
+      setError(detailedMsg);
     } finally {
       setLoading(false);
     }
@@ -95,7 +121,7 @@ export default function RegisterPage() {
             </TextField>
             {formData.role !== 'student' && (
               <TextField fullWidth label="Institution Code" name="institutionCode" value={formData.institutionCode} onChange={handleChange} required sx={{ mb: 2 }}
-                helperText={`Required for ${formData.role} registration`}
+                helperText={formData.role === 'teacher' ? 'Required for Teacher registration (Code: SBJC-TEACH-2026)' : 'Required for Admin registration (Code: SBJC-ADMIN-2026)'}
               />
             )}
           </>
