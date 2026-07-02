@@ -96,20 +96,16 @@ export default function AttendanceMarkerPage() {
   // Pending action to run after permission is confirmed
   const [pendingQrAction, setPendingQrAction] = useState(null);
 
-  // Fetch teacher's courses and subjects
+  // Fetch teacher's courses
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
         setAuthHeader(accessToken);
-        const [courseRes, subjectRes] = await Promise.all([
-          courseApi.list({ teacherId: user.id }),
-          subjectApi.list({ teacherId: user.id }),
-        ]);
+        const courseRes = await courseApi.list();
         setCourses(courseRes.data.data || []);
-        setSubjects(subjectRes.data.data || []);
       } catch (err) {
         console.error(err);
-        toast.error('Failed to load courses or subjects');
+        toast.error('Failed to load courses');
       }
     };
     if (accessToken && user?.id) {
@@ -118,14 +114,14 @@ export default function AttendanceMarkerPage() {
   }, [accessToken, user?.id]);
 
   const loadAttendanceStates = async () => {
-    if (!selectedCourseId || !selectedSubjectId || !attendanceDate) return;
+    if (!selectedCourseId || !attendanceDate) return;
     setStudentsLoading(true);
     try {
       setAuthHeader(accessToken);
       const [studentsRes, recordsRes, reqsRes] = await Promise.all([
         courseApi.getStudents(selectedCourseId),
-        attendanceApi.list({ courseId: selectedCourseId, subjectId: selectedSubjectId, date: attendanceDate }),
-        attendanceApi.listEditRequests({ courseId: selectedCourseId, subjectId: selectedSubjectId, date: attendanceDate, status: 'Pending' })
+        attendanceApi.list({ courseId: selectedCourseId, date: attendanceDate }),
+        attendanceApi.listEditRequests({ courseId: selectedCourseId, date: attendanceDate, status: 'Pending' })
       ]);
       
       const studentList = studentsRes.data.data || [];
@@ -160,13 +156,14 @@ export default function AttendanceMarkerPage() {
   };
 
   useEffect(() => {
-    if (selectedCourseId && selectedSubjectId && attendanceDate && accessToken) {
+    if (selectedCourseId && attendanceDate && accessToken) {
       loadAttendanceStates();
+      fetchPastRecords();
     } else {
       setStudents([]);
       setRecords({});
     }
-  }, [selectedCourseId, selectedSubjectId, attendanceDate, accessToken]);
+  }, [selectedCourseId, attendanceDate, accessToken]);
 
   // QR timer countdown
   useEffect(() => {
@@ -219,10 +216,6 @@ export default function AttendanceMarkerPage() {
       toast.error('Please select a course');
       return;
     }
-    if (!selectedSubjectId) {
-      toast.error('Please select a subject');
-      return;
-    }
     const recordsArray = Object.keys(attendanceRecords).map((studentId) => ({
       studentId,
       status: attendanceRecords[studentId] || 'absent',
@@ -232,7 +225,6 @@ export default function AttendanceMarkerPage() {
       setAuthHeader(accessToken);
       await attendanceApi.mark({
         courseId: selectedCourseId,
-        subjectId: selectedSubjectId,
         date: attendanceDate,
         records: recordsArray,
         isDraft: isDraft,
@@ -240,6 +232,7 @@ export default function AttendanceMarkerPage() {
 
       toast.success(isDraft ? 'Attendance draft saved successfully!' : 'Attendance records submitted and locked successfully!');
       loadAttendanceStates();
+      fetchPastRecords();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to submit attendance');
     }
@@ -252,7 +245,6 @@ export default function AttendanceMarkerPage() {
       setAuthHeader(accessToken);
       const res = await attendanceApi.generateQR({
         courseId: selectedCourseId,
-        subjectId: selectedSubjectId,
         durationMinutes: qrDuration,
       });
       setQrToken(res.data.data.qrToken);
@@ -265,23 +257,9 @@ export default function AttendanceMarkerPage() {
     }
   };
 
-  /**
-   * Generate QR Code — entry point.
-   *
-   * On native platforms: shows a rationale dialog first, then requests the
-   * CAMERA permission via @capacitor/camera before generating the QR token.
-   * On web: generates directly (browser handles camera via WebRTC if needed).
-   *
-   * Principle of Least Privilege: Camera permission is ONLY requested here,
-   * not on app mount or in any other context.
-   */
   const handleGenerateQR = async () => {
     if (!selectedCourseId) {
       toast.error('Please select a course');
-      return;
-    }
-    if (!selectedSubjectId) {
-      toast.error('Please select a subject');
       return;
     }
 
@@ -295,11 +273,6 @@ export default function AttendanceMarkerPage() {
     }
   };
 
-  /**
-   * Called when user confirms the camera rationale dialog.
-   * Requests the native camera permission, then proceeds with QR generation
-   * or shows a guidance toast if the user denies.
-   */
   const handleCameraRationaleConfirm = async () => {
     setCameraRationaleOpen(false);
     setTimeout(async () => {
@@ -319,11 +292,11 @@ export default function AttendanceMarkerPage() {
   };
 
   const fetchPastRecords = async () => {
-    if (!selectedSubjectId) return;
+    if (!selectedCourseId) return;
     setPastLoading(true);
     try {
       setAuthHeader(accessToken);
-      const res = await attendanceApi.getBySubject(selectedSubjectId);
+      const res = await attendanceApi.getByCourse(selectedCourseId);
       setPastRecords(res.data.data || []);
     } catch (err) {
       console.error(err);
@@ -443,7 +416,7 @@ export default function AttendanceMarkerPage() {
       <Card sx={{ borderRadius: '16px', mb: 4, border: '1px solid', borderColor: 'divider' }}>
         <CardContent sx={{ p: 3 }}>
           <Grid container spacing={3} alignItems="center">
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={6}>
               <FormControl fullWidth>
                 <InputLabel id="attendance-course-label">Select Course / Class</InputLabel>
                 <Select
@@ -462,29 +435,7 @@ export default function AttendanceMarkerPage() {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} md={4}>
-              <FormControl fullWidth disabled={!selectedCourseId}>
-                <InputLabel id="attendance-subject-label">Select Subject</InputLabel>
-                <Select
-                  labelId="attendance-subject-label"
-                  value={selectedSubjectId}
-                  label="Select Subject"
-                  onChange={(e) => setSelectedSubjectId(e.target.value)}
-                  sx={{ borderRadius: '10px' }}
-                >
-                  {filteredSubjects.map((sub) => (
-                    <MenuItem key={sub.id} value={sub.id}>
-                      {sub.name} ({sub.code})
-                    </MenuItem>
-                  ))}
-                  {selectedCourseId && filteredSubjects.length === 0 && (
-                    <MenuItem value="" disabled>No subjects mapped for this class</MenuItem>
-                  )}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={6}>
               <TextField
                 label="Attendance Date"
                 type="date"
@@ -777,13 +728,13 @@ export default function AttendanceMarkerPage() {
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
                 <CircularProgress />
               </Box>
-            ) : !selectedSubjectId ? (
+            ) : !selectedCourseId ? (
               <Box sx={{ p: 4, textAlign: 'center' }}>
-                <Typography color="text.secondary">Please select a course and subject first.</Typography>
+                <Typography color="text.secondary">Please select a course / class first.</Typography>
               </Box>
             ) : pastRecords.length === 0 ? (
               <Box sx={{ p: 4, textAlign: 'center' }}>
-                <Typography color="text.secondary">No past attendance records found for this subject.</Typography>
+                <Typography color="text.secondary">No past attendance records found for this class.</Typography>
               </Box>
             ) : (
               <TableContainer component={Paper} elevation={0} sx={{ overflowX: 'auto' }}>

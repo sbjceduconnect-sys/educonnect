@@ -26,12 +26,14 @@ class AttendanceView(APIView):
     def post(self, request):
         course_id = request.data.get('course_id') or request.data.get('courseId')
         subject_id = request.data.get('subject_id') or request.data.get('subjectId')
+        if not subject_id or subject_id in ('null', 'undefined', ''):
+            subject_id = None
         date = request.data.get('date')
         records = request.data.get('records', [])
         is_draft = request.data.get('is_draft') or request.data.get('isDraft') or False
         
-        if not course_id or not subject_id or not date:
-            return api_error("course_id, subject_id, and date are required.", status=400)
+        if not course_id or not date:
+            return api_error("course_id and date are required.", status=400)
             
         created = []
         is_admin = request.user.role == 'admin'
@@ -48,12 +50,17 @@ class AttendanceView(APIView):
                 db_status = 'Absent'
                 
             # Check lock state
-            existing = AttendanceRecord.objects.filter(
-                student_id=student_id,
-                course_id=course_id,
-                subject_id=subject_id,
-                date=date
-            ).first()
+            filter_kwargs = {
+                'student_id': student_id,
+                'course_id': course_id,
+                'date': date
+            }
+            if subject_id:
+                filter_kwargs['subject_id'] = subject_id
+            else:
+                filter_kwargs['subject__isnull'] = True
+
+            existing = AttendanceRecord.objects.filter(**filter_kwargs).first()
 
             if existing:
                 # If the existing record is a draft, standard users (teachers) CAN edit it
@@ -188,6 +195,29 @@ class AttendanceBySubjectView(APIView):
             if key not in grouped:
                 grouped[key] = {
                     "id": f"{rec.course_id}_{rec.subject_id or 0}_{rec.date}_{rec.method}",
+                    "date": rec.date,
+                    "method": rec.method,
+                    "records": []
+                }
+            grouped[key]["records"].append({
+                "studentId": rec.student.id,
+                "status": rec.status.lower()
+            })
+            
+        return api_success(data=list(grouped.values()))
+
+
+class AttendanceByCourseView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, course_id):
+        records = AttendanceRecord.objects.filter(course_id=course_id)
+        grouped = {}
+        for rec in records:
+            key = (rec.date, rec.method)
+            if key not in grouped:
+                grouped[key] = {
+                    "id": f"{rec.course_id}_{rec.date}_{rec.method}",
                     "date": rec.date,
                     "method": rec.method,
                     "records": []

@@ -80,6 +80,7 @@ export const attendanceApi = {
   generateQR: (data) => api.post('/attendance/qr/generate', data),
   scanQR: (token) => api.post('/attendance/qr/scan', { token }),
   getBySubject: (subjectId, params) => api.get(`/attendance/subject/${subjectId}`, { params }),
+  getByCourse: (courseId, params) => api.get(`/attendance/course/${courseId}`, { params }),
   getStudent: (studentId, params) => api.get(`/attendance/student/${studentId}`, { params }),
   getSummary: (studentId) => api.get(`/attendance/student/${studentId}/summary`),
   update: (id, data) => api.put(`/attendance/${id}`, data),
