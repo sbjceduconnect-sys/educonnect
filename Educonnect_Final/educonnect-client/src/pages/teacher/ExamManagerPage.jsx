@@ -271,7 +271,6 @@ export default function ExamManagerPage() {
                     <MenuItem value="mid">Mid Term</MenuItem>
                     <MenuItem value="final">Final Term</MenuItem>
                     <MenuItem value="quiz">Quiz</MenuItem>
-                    <MenuItem value="assignment">Assignment</MenuItem>
                     <MenuItem value="practical">Practical</MenuItem>
                   </Select>
                 </FormControl>

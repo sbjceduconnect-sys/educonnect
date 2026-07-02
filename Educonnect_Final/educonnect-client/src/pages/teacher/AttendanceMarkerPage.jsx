@@ -464,7 +464,6 @@ export default function AttendanceMarkerPage() {
         }}
       >
         <Tab icon={<People sx={{ mr: 1 }} />} label="Manual Marking" iconPosition="start" sx={{ textTransform: 'none', fontWeight: 600 }} />
-        <Tab icon={<QrCode sx={{ mr: 1 }} />} label="QR Code Attendance" iconPosition="start" sx={{ textTransform: 'none', fontWeight: 600 }} />
         <Tab icon={<History sx={{ mr: 1 }} />} label="Attendance Logs" iconPosition="start" sx={{ textTransform: 'none', fontWeight: 600 }} />
       </Tabs>
 
@@ -474,25 +473,6 @@ export default function AttendanceMarkerPage() {
           <CardContent sx={{ p: 0 }}>
             <Box sx={{ p: 2.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
               <Typography variant="h6" sx={{ fontWeight: 800 }}>Enrolled Student List</Typography>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button
-                  size="small"
-                  variant="contained"
-                  onClick={loadAttendanceStates}
-                  color="primary"
-                  startIcon={<Refresh />}
-                  disabled={students.length === 0}
-                  sx={{ borderRadius: '8px', textTransform: 'none', background: 'linear-gradient(135deg, #6C63FF, #3F51B5)' }}
-                >
-                  Refresh List
-                </Button>
-                <Button size="small" variant="outlined" onClick={() => handleMarkAll('present')} color="success" sx={{ borderRadius: '8px', textTransform: 'none' }}>
-                  Mark All Present
-                </Button>
-                <Button size="small" variant="outlined" onClick={() => handleMarkAll('absent')} color="error" sx={{ borderRadius: '8px', textTransform: 'none' }}>
-                  Mark All Absent
-                </Button>
-              </Box>
             </Box>
 
             <Divider />
@@ -503,73 +483,108 @@ export default function AttendanceMarkerPage() {
               </Box>
             ) : students.length === 0 ? (
               <Box sx={{ p: 4, textAlign: 'center' }}>
-                <Typography color="text.secondary">No students enrolled or no course selected.</Typography>
+                <Typography color="text.secondary">Please select a course / class to load student directory.</Typography>
               </Box>
             ) : (
               <TableContainer component={Paper} elevation={0} sx={{ overflowX: 'auto' }}>
                 <Table>
                   <TableHead sx={{ bgcolor: 'action.hover' }}>
                     <TableRow>
-                      <TableCell sx={{ fontWeight: 700 }}>Roll / Reg No</TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 700 }}>Status Selection</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 700 }}>Lock State & Actions</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>Roll No / Reg</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>Student Name</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 700 }}>Status</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 700 }}>Action</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {students.map((student) => {
+                      const status = attendanceRecords[student.id] || '';
                       const dbRec = dbRecords[student.id];
+                      const isLocked = dbRec && !dbRec.isDraft && user.role !== 'admin';
                       const pendingReq = pendingRequests[student.id];
-                      const isLocked = !!dbRec && !dbRec.isDraft && user?.role !== 'admin';
 
                       return (
                         <TableRow key={student.id} hover>
-                          <TableCell>{student.profile?.enrollmentNo || 'N/A'}</TableCell>
+                          <TableCell sx={{ fontWeight: 600 }}>{student.enrollmentNo || student.id}</TableCell>
                           <TableCell>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                              <Avatar src={getAvatarUrl(student.avatar)} sx={{ width: 32, height: 32, fontSize: '0.8rem', background: 'linear-gradient(135deg, #6C63FF, #3F51B5)' }}>
-                                {(student.firstName?.[0] || '') + (student.lastName?.[0] || '')}
-                              </Avatar>
                               <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                {student.firstName} {student.lastName}
+                                {student.name || `${student.firstName} ${student.lastName}`}
                               </Typography>
+                              {dbRec && (
+                                <Chip
+                                  label={dbRec.isDraft ? 'Draft' : 'Final'}
+                                  size="small"
+                                  color={dbRec.isDraft ? 'warning' : 'success'}
+                                  variant="outlined"
+                                  sx={{ height: 20, fontSize: '0.65rem', fontWeight: 700 }}
+                                />
+                              )}
                             </Box>
                           </TableCell>
                           <TableCell align="center">
-                            <RadioGroup
-                              row
-                              value={attendanceRecords[student.id] || ''}
-                              onChange={(e) => handleStatusChange(student.id, e.target.value)}
-                              sx={{ justifyContent: 'center', gap: 1 }}
-                            >
-                              <FormControlLabel value="present" disabled={isLocked} control={<Radio color="success" />} label="Present" />
-                              <FormControlLabel value="absent" disabled={isLocked} control={<Radio color="error" />} label="Absent" />
-                              <FormControlLabel value="late" disabled={isLocked} control={<Radio color="warning" />} label="Late" />
-                              <FormControlLabel value="excused" disabled={isLocked} control={<Radio color="info" />} label="Excused" />
-                            </RadioGroup>
+                            <Chip
+                              label={status ? status.toUpperCase() : 'NOT MARKED'}
+                              size="small"
+                              color={getStatusColor(status)}
+                              sx={{ fontWeight: 700, minWidth: 90 }}
+                            />
                           </TableCell>
                           <TableCell align="center">
-                            {dbRec ? (
+                            {isLocked ? (
                               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                                {dbRec.isDraft ? (
-                                  <Chip label="Draft" color="warning" size="small" variant="outlined" sx={{ fontWeight: 600 }} />
-                                ) : isLocked ? (
-                                  pendingReq ? (
-                                    <Chip label="Pending Approval" color="warning" size="small" variant="outlined" sx={{ fontWeight: 600 }} />
-                                  ) : (
-                                    <>
-                                      <Chip label="Locked" icon={<Lock sx={{ fontSize: '0.9rem' }} />} size="small" variant="outlined" sx={{ fontWeight: 600 }} />
-                                      <Button variant="contained" size="small" color="primary" onClick={() => handleOpenEditDialog(student)} sx={{ textTransform: 'none', borderRadius: '6px', fontSize: '0.75rem', py: 0.2 }}>
-                                        Request Edit
-                                      </Button>
-                                    </>
-                                  )
+                                {pendingReq ? (
+                                  <Chip
+                                    icon={<Pending />}
+                                    label={`Edit Requested (${pendingReq.status})`}
+                                    size="small"
+                                    color="warning"
+                                    variant="outlined"
+                                    sx={{ fontWeight: 600 }}
+                                  />
                                 ) : (
-                                  <Chip label="Submitted" color="success" size="small" variant="outlined" sx={{ fontWeight: 600 }} />
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    color="warning"
+                                    startIcon={<Lock />}
+                                    onClick={() => handleOpenEditDialog(student)}
+                                    sx={{ borderRadius: '8px', textTransform: 'none' }}
+                                  >
+                                    Request Unlock Edit
+                                  </Button>
                                 )}
                               </Box>
                             ) : (
-                              <Typography variant="caption" color="text.secondary">-</Typography>
+                              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                                <Button
+                                  size="small"
+                                  variant={status === 'present' ? 'contained' : 'outlined'}
+                                  color="success"
+                                  onClick={() => handleStatusChange(student.id, 'present')}
+                                  sx={{ borderRadius: '8px', minWidth: 75 }}
+                                >
+                                  Present
+                                </Button>
+                                <Button
+                                  size="small"
+                                  variant={status === 'absent' ? 'contained' : 'outlined'}
+                                  color="error"
+                                  onClick={() => handleStatusChange(student.id, 'absent')}
+                                  sx={{ borderRadius: '8px', minWidth: 75 }}
+                                >
+                                  Absent
+                                </Button>
+                                <Button
+                                  size="small"
+                                  variant={status === 'late' ? 'contained' : 'outlined'}
+                                  color="warning"
+                                  onClick={() => handleStatusChange(student.id, 'late')}
+                                  sx={{ borderRadius: '8px', minWidth: 70 }}
+                                >
+                                  Late
+                                </Button>
+                              </Box>
                             )}
                           </TableCell>
                         </TableRow>
@@ -585,15 +600,11 @@ export default function AttendanceMarkerPage() {
             <Box sx={{ p: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
               <Button
                 variant="outlined"
-                color="warning"
+                color="secondary"
                 onClick={() => handleSubmitManual(true)}
                 disabled={students.length === 0}
-                sx={{
-                  borderRadius: '10px',
-                  px: 4,
-                  py: 1.2,
-                  fontWeight: 600
-                }}
+                startIcon={<Save />}
+                sx={{ borderRadius: '10px', px: 3 }}
               >
                 Save as Draft
               </Button>
@@ -614,104 +625,6 @@ export default function AttendanceMarkerPage() {
             </Box>
           </CardContent>
         </Card>
-      ) : activeTab === 1 ? (
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={5}>
-            <Card sx={{ borderRadius: '16px', border: '1px solid', borderColor: 'divider' }}>
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" sx={{ fontWeight: 800, mb: 3 }}>QR Code Configuration</Typography>
-                
-                <Grid container spacing={3.5}>
-                  <Grid item xs={12}>
-                    <FormControl fullWidth>
-                      <InputLabel id="qr-duration-label">QR Validity Duration</InputLabel>
-                      <Select
-                        labelId="qr-duration-label"
-                        value={qrDuration}
-                        label="QR Validity Duration"
-                        onChange={(e) => setQrDuration(e.target.value)}
-                        sx={{ borderRadius: '10px' }}
-                      >
-                        <MenuItem value={1}>1 Minute</MenuItem>
-                        <MenuItem value={5}>5 Minutes</MenuItem>
-                        <MenuItem value={10}>10 Minutes</MenuItem>
-                        <MenuItem value={15}>15 Minutes</MenuItem>
-                        <MenuItem value={30}>30 Minutes</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
-
-                  <Grid item xs={12}>
-                    <Button
-                      variant="contained"
-                      onClick={handleGenerateQR}
-                      fullWidth
-                      disabled={qrLoading || !selectedCourseId}
-                      startIcon={qrLoading ? <CircularProgress size={16} color="inherit" /> : <QrCode />}
-                      sx={{
-                        borderRadius: '10px',
-                        py: 1.5,
-                        background: 'linear-gradient(135deg, #6C63FF, #3F51B5)',
-                      }}
-                    >
-                      Generate QR Code
-                    </Button>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={7}>
-            <Card sx={{ borderRadius: '16px', border: '1px solid', borderColor: 'divider', minHeight: 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <CardContent sx={{ p: 4, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                {qrToken ? (
-                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-                    <Box sx={{ p: 3, bgcolor: '#fff', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                      <QRCode value={qrToken} size={200} />
-                    </Box>
-                    <Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, color: 'error.main', mb: 1 }}>
-                        <Timer />
-                        <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                          {formatTimer(qrTimer)}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ bgcolor: 'action.hover', px: 3, py: 1.5, borderRadius: '12px', mb: 2, border: '1px dashed', borderColor: 'primary.light' }}>
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>
-                          Manual Entry Token
-                        </Typography>
-                        <Typography variant="h4" sx={{ fontWeight: 900, color: 'primary.main', letterSpacing: 4, fontFamily: 'monospace' }}>
-                          {qrToken}
-                        </Typography>
-                      </Box>
-                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                        Students should scan this QR code or manually enter the 6-character token to mark attendance.
-                      </Typography>
-                    </Box>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<Refresh />}
-                      onClick={handleGenerateQR}
-                      sx={{ borderRadius: '8px' }}
-                    >
-                      Regenerate QR
-                    </Button>
-                  </Box>
-                ) : (
-                  <Box sx={{ color: 'text.secondary' }}>
-                    <QrCode sx={{ fontSize: 80, color: 'action.disabled', mb: 2 }} />
-                    <Typography variant="h6" sx={{ fontWeight: 700 }}>No Active QR Code</Typography>
-                    <Typography variant="body2" sx={{ maxWidth: 320, mt: 1 }}>
-                      Configure the settings and generate a QR Code to display on-screen for class scanning.
-                    </Typography>
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
       ) : (
         <Card sx={{ borderRadius: '16px', border: '1px solid', borderColor: 'divider' }}>
           <CardContent sx={{ p: 0 }}>

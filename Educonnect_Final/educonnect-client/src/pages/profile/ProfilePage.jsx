@@ -216,17 +216,7 @@ export default function ProfilePage() {
                   {user?.profile?.guardianName && <Typography variant="body2" sx={{ mb: 0.8 }}><strong>Guardian:</strong> {user.profile.guardianName} ({user.profile.guardianPhone})</Typography>}
                   {user?.profile?.qualification && <Typography variant="body2" sx={{ mb: 0.8 }}><strong>Qualification:</strong> {user.profile.qualification}</Typography>}
                   {user?.profile?.specialization && <Typography variant="body2" sx={{ mb: 0.8 }}><strong>Specialization:</strong> {user.profile.specialization}</Typography>}
-                  {user?.profile?.address && <Typography variant="body2" sx={{ mb: 0.8 }}><strong>Address:</strong> {user.profile.address}</Typography>}
                 </Box>
-                {user?.role === 'student' && (
-                  <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Student ID QR Code</Typography>
-                    <Box sx={{ p: 1.5, bgcolor: '#fff', borderRadius: '12px', border: '1px solid', borderColor: 'divider', display: 'inline-block' }}>
-                      <QRCode value={String(user.id)} size={120} />
-                    </Box>
-                    <Typography variant="caption" color="text.secondary">Present this QR code to the instructor to mark attendance.</Typography>
-                  </Box>
-                )}
               </CardContent>
             </Card>
           </motion.div>

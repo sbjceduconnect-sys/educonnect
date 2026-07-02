@@ -102,7 +102,7 @@ export default function AttendanceReportsPage() {
       setAuthHeader(accessToken);
       const [studentsRes, recordsRes] = await Promise.all([
         courseApi.getStudents(rosterCourseId),
-        attendanceApi.list({ courseId: rosterCourseId, subjectId: rosterSubjectId, date: rosterDate })
+        attendanceApi.list({ courseId: rosterCourseId, date: rosterDate })
       ]);
       setRosterStudents(studentsRes.data.data || []);
       setRosterRecords(recordsRes.data.data || []);
@@ -115,10 +115,10 @@ export default function AttendanceReportsPage() {
   };
 
   useEffect(() => {
-    if (rosterCourseId && rosterSubjectId && rosterDate) {
+    if (rosterCourseId && rosterDate) {
       fetchDailyRoster();
     }
-  }, [rosterCourseId, rosterSubjectId, rosterDate]);
+  }, [rosterCourseId, rosterDate]);
 
   useEffect(() => {
     if (activeTab === 2) {
@@ -318,7 +318,7 @@ export default function AttendanceReportsPage() {
                 Filter Attendance History
               </Typography>
               <Grid container spacing={2.5}>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid item xs={12} sm={6} md={4}>
                   <FormControl fullWidth size="small">
                     <InputLabel id="course-filter-label">Course / Class</InputLabel>
                     <Select
@@ -327,7 +327,6 @@ export default function AttendanceReportsPage() {
                       label="Course / Class"
                       onChange={(e) => {
                         setSelectedCourseId(e.target.value);
-                        setSelectedSubjectId('');
                       }}
                       sx={{ borderRadius: '8px' }}
                     >
@@ -341,27 +340,7 @@ export default function AttendanceReportsPage() {
                   </FormControl>
                 </Grid>
 
-                <Grid item xs={12} sm={6} md={3}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel id="subject-filter-label">Subject</InputLabel>
-                    <Select
-                      labelId="subject-filter-label"
-                      value={selectedSubjectId}
-                      label="Subject"
-                      onChange={(e) => setSelectedSubjectId(e.target.value)}
-                      sx={{ borderRadius: '8px' }}
-                    >
-                      <MenuItem value="">All Subjects</MenuItem>
-                      {filteredSubjects.map((s) => (
-                        <MenuItem key={s.id} value={s.id}>
-                          {s.name} ({s.code})
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={6} md={3}>
+                <Grid item xs={6} md={4}>
                   <TextField
                     label="Start Date"
                     type="date"
@@ -374,7 +353,7 @@ export default function AttendanceReportsPage() {
                   />
                 </Grid>
 
-                <Grid item xs={6} md={3}>
+                <Grid item xs={6} md={4}>
                   <TextField
                     label="End Date"
                     type="date"
@@ -395,8 +374,8 @@ export default function AttendanceReportsPage() {
             rows={reports}
             columns={columns}
             loading={loading}
-            searchPlaceholder="Search by subject or teacher..."
-            searchField={['subjectName', 'markedByName', 'courseTitle']}
+            searchPlaceholder="Search by teacher or class..."
+            searchField={['markedByName', 'courseTitle']}
             exportFilename="college_attendance_reports.csv"
           />
         </>
@@ -408,8 +387,9 @@ export default function AttendanceReportsPage() {
             <Card sx={{ borderRadius: '16px', border: '1px solid', borderColor: 'divider' }}>
               <CardContent sx={{ p: 3 }}>
                 <Typography variant="h6" sx={{ fontWeight: 800, mb: 3 }}>Daily Attendance Roster View</Typography>
+                
                 <Grid container spacing={3} alignItems="center">
-                  <Grid item xs={12} md={4}>
+                  <Grid item xs={12} md={6}>
                     <FormControl fullWidth>
                       <InputLabel id="roster-course-label">Select Course / Class</InputLabel>
                       <Select
@@ -428,26 +408,7 @@ export default function AttendanceReportsPage() {
                     </FormControl>
                   </Grid>
 
-                  <Grid item xs={12} md={4}>
-                    <FormControl fullWidth disabled={!rosterCourseId}>
-                      <InputLabel id="roster-subject-label">Select Subject</InputLabel>
-                      <Select
-                        labelId="roster-subject-label"
-                        value={rosterSubjectId}
-                        label="Select Subject"
-                        onChange={(e) => setRosterSubjectId(e.target.value)}
-                        sx={{ borderRadius: '10px' }}
-                      >
-                        {filteredRosterSubjects.map((sub) => (
-                          <MenuItem key={sub.id} value={sub.id}>
-                            {sub.name} ({sub.code})
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-
-                  <Grid item xs={12} md={4}>
+                  <Grid item xs={12} md={6}>
                     <TextField
                       label="Attendance Date"
                       type="date"
@@ -466,9 +427,9 @@ export default function AttendanceReportsPage() {
                   <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
                     <CircularProgress />
                   </Box>
-                ) : !rosterCourseId || !rosterSubjectId ? (
+                ) : !rosterCourseId ? (
                   <Box sx={{ p: 4, textAlign: 'center' }}>
-                    <Typography color="text.secondary">Please select a course and subject to inspect the daily roster.</Typography>
+                    <Typography color="text.secondary">Please select a course to inspect the daily roster.</Typography>
                   </Box>
                 ) : rosterStudents.length === 0 ? (
                   <Box sx={{ p: 4, textAlign: 'center' }}>
