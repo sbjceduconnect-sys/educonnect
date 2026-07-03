@@ -88,6 +88,7 @@ export default function AttendanceMarkerPage() {
 
   // Past attendance records states
   const [pastRecords, setPastRecords] = useState([]);
+  const [pastLoading, setPastLoading] = useState(false);
   const getStatusColor = (status) => {
     if (!status) return 'default';
     const s = status.toLowerCase();
