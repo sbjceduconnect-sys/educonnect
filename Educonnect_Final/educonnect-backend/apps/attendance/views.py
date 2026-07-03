@@ -345,13 +345,15 @@ class AttendanceReportsView(APIView):
             
         grouped = {}
         for rec in qs:
-            key = (rec.date, rec.course_id, rec.subject_id, rec.marked_by_id, rec.method)
+            # Group by (date, course, method) only — subject is ignored so that
+            # QR records spread across multiple subjects appear as ONE session row
+            key = (rec.date, rec.course_id, rec.method, rec.marked_by_id)
             if key not in grouped:
                 grouped[key] = {
-                    "id": f"{rec.course_id}_{rec.subject_id or 0}_{rec.date}_{rec.method}",
+                    "id": f"{rec.course_id}_{rec.date}_{rec.method}",
                     "date": rec.date,
                     "courseTitle": rec.course.name if rec.course else 'Unknown Class',
-                    "subjectName": rec.subject.name if rec.subject else 'General',
+                    "subjectName": 'General',
                     "markedByName": rec.marked_by.get_full_name() if rec.marked_by else 'System',
                     "method": rec.method,
                     "presentCount": 0,
@@ -364,12 +366,15 @@ class AttendanceReportsView(APIView):
                 grouped[key]["presentCount"] += 1
             grouped[key]["totalCount"] += 1
             
-            grouped[key]["records"].append({
-                "studentId": rec.student.id,
-                "studentName": rec.student.get_full_name(),
-                "enrollmentNo": getattr(rec.student.profile, 'enrollment_no', 'N/A') if hasattr(rec.student, 'profile') else 'N/A',
-                "status": rec.status.lower()
-            })
+            # Only add unique students (avoid duplicates from multi-subject records)
+            existing_student_ids = [r["studentId"] for r in grouped[key]["records"]]
+            if rec.student.id not in existing_student_ids:
+                grouped[key]["records"].append({
+                    "studentId": rec.student.id,
+                    "studentName": rec.student.get_full_name(),
+                    "enrollmentNo": getattr(rec.student.profile, 'enrollment_no', 'N/A') if hasattr(rec.student, 'profile') else 'N/A',
+                    "status": rec.status.lower()
+                })
             
         return api_success(data=list(grouped.values()))
 
@@ -379,21 +384,37 @@ class AttendanceDetailView(APIView):
 
     def delete(self, request, pk):
         pk_str = str(pk)
+        # New format: "{course_id}_{date}_{method}"  e.g. "6_2026-07-04_qr"
+        # Legacy format: "{course_id}_{subject_id}_{date}_{method}"  e.g. "6_0_2026-07-04_qr"
         if "_" in pk_str:
             parts = pk_str.split("_")
-            if len(parts) >= 4:
+            # Try new 3-part format first: course_id, date, method
+            # date looks like YYYY-MM-DD (contains hyphens, no underscores)
+            # So split by _ gives: [course_id, date, method] = 3 parts
+            # OR legacy 4-part: [course_id, subject_id, date, method]
+            if len(parts) == 3:
+                # New format: course_id _ date _ method
                 course_id = parts[0]
-                subject_id = parts[1]
-                date = parts[2]
-                method = parts[3]
-                
+                date = parts[1]
+                method = parts[2]
                 q = AttendanceRecord.objects.filter(
                     course_id=course_id,
                     date=date,
                     method=method
                 )
-                if subject_id != '0':
-                    q = q.filter(subject_id=subject_id)
+                count = q.delete()[0]
+                return api_success(message=f"Deleted {count} attendance records.")
+            elif len(parts) >= 4:
+                # Legacy format: course_id _ subject_id _ date _ method
+                course_id = parts[0]
+                date = parts[2]
+                method = parts[3]
+                # Delete ALL records for this course+date+method (ignore subject)
+                q = AttendanceRecord.objects.filter(
+                    course_id=course_id,
+                    date=date,
+                    method=method
+                )
                 count = q.delete()[0]
                 return api_success(message=f"Deleted {count} attendance records.")
         
