@@ -458,27 +458,24 @@ class TeacherDashboardView(APIView):
         # Assigned subjects count for this teacher
         assigned_subjects = Subject.objects.filter(teacher=teacher)
         total_subjects = assigned_subjects.count()
-        if total_subjects == 0:
-            total_subjects = Subject.objects.count()
 
-        # Assigned courses count for this teacher (M2M teachers OR ForeignKey teacher OR subjects)
+        # Assigned courses count for this teacher (via M2M teachers, FK teacher, or assigned subjects)
         assigned_courses = Course.objects.filter(
             Q(teachers=teacher) | Q(teacher=teacher) | Q(subject__teacher=teacher)
         ).distinct()
         total_courses = assigned_courses.count()
-        if total_courses == 0:
-            total_courses = Course.objects.count()
 
-        courses_to_serialize = assigned_courses if assigned_courses.exists() else Course.objects.all()
+        # Total students enrolled in this teacher's assigned courses
+        if assigned_courses.exists():
+            total_students = User.objects.filter(role='student', enrolled_courses__in=assigned_courses).distinct().count()
+        else:
+            total_students = 0
 
-        total_students = User.objects.filter(role='student').count()
         announcements = Announcement.objects.all().order_by('-created_at')[:5]
         
         serialized_courses = []
-        for course in courses_to_serialize:
+        for course in assigned_courses:
             student_count = course.students.filter(role='student').count()
-            if student_count == 0:
-                student_count = total_students
             serialized_courses.append({
                 "id": course.id,
                 "title": course.name,

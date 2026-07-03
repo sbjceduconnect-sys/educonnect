@@ -23,9 +23,9 @@ class CourseListView(APIView):
         
         # Filter by teacher's assigned courses if user is teacher
         if user.role == 'teacher' and not fetch_all:
-            assigned = qs.filter(Q(teachers=user) | Q(teacher=user)).distinct()
-            if assigned.exists():
-                qs = assigned
+            qs = qs.filter(
+                Q(teachers=user) | Q(teacher=user) | Q(subject__teacher=user)
+            ).distinct()
 
         if teacher_id:
             qs = qs.filter(Q(teachers__id=teacher_id) | Q(teacher_id=teacher_id)).distinct()
