@@ -1,0 +1,1 @@
+var e=[`11th Science`,`11th Commerce`,`12th Science`,`12th Commerce`];export{e as t};
