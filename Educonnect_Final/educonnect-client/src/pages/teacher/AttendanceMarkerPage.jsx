@@ -472,6 +472,7 @@ export default function AttendanceMarkerPage() {
         }}
       >
         <Tab icon={<People sx={{ mr: 1 }} />} label="Manual Marking" iconPosition="start" sx={{ textTransform: 'none', fontWeight: 600 }} />
+        <Tab icon={<QrCode sx={{ mr: 1 }} />} label="Generate QR Code" iconPosition="start" sx={{ textTransform: 'none', fontWeight: 600 }} />
         <Tab icon={<History sx={{ mr: 1 }} />} label="Attendance Logs" iconPosition="start" sx={{ textTransform: 'none', fontWeight: 600 }} />
       </Tabs>
 
@@ -633,6 +634,104 @@ export default function AttendanceMarkerPage() {
             </Box>
           </CardContent>
         </Card>
+      ) : activeTab === 1 ? (
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={5}>
+            <Card sx={{ borderRadius: '16px', border: '1px solid', borderColor: 'divider' }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" sx={{ fontWeight: 800, mb: 3 }}>QR Code Configuration</Typography>
+                
+                <Grid container spacing={3.5}>
+                  <Grid item xs={12}>
+                    <FormControl fullWidth>
+                      <InputLabel id="qr-duration-label">QR Validity Duration</InputLabel>
+                      <Select
+                        labelId="qr-duration-label"
+                        value={qrDuration}
+                        label="QR Validity Duration"
+                        onChange={(e) => setQrDuration(e.target.value)}
+                        sx={{ borderRadius: '10px' }}
+                      >
+                        <MenuItem value={1}>1 Minute</MenuItem>
+                        <MenuItem value={5}>5 Minutes</MenuItem>
+                        <MenuItem value={10}>10 Minutes</MenuItem>
+                        <MenuItem value={15}>15 Minutes</MenuItem>
+                        <MenuItem value={30}>30 Minutes</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Button
+                      variant="contained"
+                      onClick={handleGenerateQR}
+                      fullWidth
+                      disabled={qrLoading || !selectedCourseId}
+                      startIcon={qrLoading ? <CircularProgress size={16} color="inherit" /> : <QrCode />}
+                      sx={{
+                        borderRadius: '10px',
+                        py: 1.5,
+                        background: 'linear-gradient(135deg, #6C63FF, #3F51B5)',
+                      }}
+                    >
+                      Generate QR Code
+                    </Button>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} md={7}>
+            <Card sx={{ borderRadius: '16px', border: '1px solid', borderColor: 'divider', minHeight: 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CardContent sx={{ p: 4, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                {qrToken ? (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                    <Box sx={{ p: 3, bgcolor: '#fff', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+                      <QRCode value={qrToken} size={200} />
+                    </Box>
+                    <Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, color: 'error.main', mb: 1 }}>
+                        <Timer />
+                        <Typography variant="h5" sx={{ fontWeight: 800 }}>
+                          {formatTimer(qrTimer)}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ bgcolor: 'action.hover', px: 3, py: 1.5, borderRadius: '12px', mb: 2, border: '1px dashed', borderColor: 'primary.light' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>
+                          Manual Entry Token
+                        </Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 900, color: 'primary.main', letterSpacing: 4, fontFamily: 'monospace' }}>
+                          {qrToken}
+                        </Typography>
+                      </Box>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                        Students should scan this QR code or manually enter the 6-character token to mark attendance.
+                      </Typography>
+                    </Box>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<Refresh />}
+                      onClick={handleGenerateQR}
+                      sx={{ borderRadius: '8px' }}
+                    >
+                      Regenerate QR
+                    </Button>
+                  </Box>
+                ) : (
+                  <Box sx={{ color: 'text.secondary' }}>
+                    <QrCode sx={{ fontSize: 80, color: 'action.disabled', mb: 2 }} />
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>No Active QR Code</Typography>
+                    <Typography variant="body2" sx={{ maxWidth: 320, mt: 1 }}>
+                      Configure the settings and generate a QR Code to display on-screen for class scanning.
+                    </Typography>
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
       ) : (
         <Card sx={{ borderRadius: '16px', border: '1px solid', borderColor: 'divider' }}>
           <CardContent sx={{ p: 0 }}>
