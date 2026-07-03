@@ -459,9 +459,9 @@ class TeacherDashboardView(APIView):
         assigned_subjects = Subject.objects.filter(teacher=teacher)
         total_subjects = assigned_subjects.count()
 
-        # Assigned courses count for this teacher (via M2M teachers, FK teacher, or assigned subjects)
+        # Assigned courses count for this teacher (via M2M teachers OR FK teacher)
         assigned_courses = Course.objects.filter(
-            Q(teachers=teacher) | Q(teacher=teacher) | Q(subject__teacher=teacher)
+            Q(teachers=teacher) | Q(teacher=teacher)
         ).distinct()
         total_courses = assigned_courses.count()
 
