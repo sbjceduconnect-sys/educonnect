@@ -60,7 +60,11 @@ export default function AttendanceMarkerPage() {
   // Manual attendance states
   const [students, setStudents] = useState([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
-  const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
+  const [attendanceDate, setAttendanceDate] = useState(() => {
+    // Use local date (IST) to match server TIME_ZONE=Asia/Kolkata, not UTC
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
   const [attendanceRecords, setRecords] = useState({}); // studentId: status
   const [dbRecords, setDbRecords] = useState({}); // studentId: dbRecordObject
   const [pendingRequests, setPendingRequests] = useState({}); // studentId: requestObject

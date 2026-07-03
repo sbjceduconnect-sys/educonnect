@@ -59,7 +59,8 @@ export default function AttendanceReportsPage() {
   // Daily roster reporting states
   const [rosterCourseId, setRosterCourseId] = useState('');
   const [rosterSubjectId, setRosterSubjectId] = useState('');
-  const [rosterDate, setRosterDate] = useState(new Date().toISOString().split('T')[0]);
+  const todayLocal = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+  const [rosterDate, setRosterDate] = useState(todayLocal);
   const [rosterStudents, setRosterStudents] = useState([]);
   const [rosterRecords, setRosterRecords] = useState([]);
   const [rosterLoading, setRosterLoading] = useState(false);
