@@ -23,6 +23,18 @@ class AttendanceView(APIView):
         if subject: qs = qs.filter(subject_id=subject)
         if student: qs = qs.filter(student_id=student)
         if date: qs = qs.filter(date=date)
+        # Order so Present records appear first (QR scans), then by most recent
+        from django.db.models import Case, When, IntegerField
+        qs = qs.annotate(
+            status_order=Case(
+                When(status='Present', then=0),
+                When(status='Late', then=1),
+                When(status='Excused', then=2),
+                When(status='Absent', then=3),
+                default=4,
+                output_field=IntegerField(),
+            )
+        ).order_by('status_order', '-id')
         return api_success(data=AttendanceSerializer(qs, many=True).data)
 
     def post(self, request):

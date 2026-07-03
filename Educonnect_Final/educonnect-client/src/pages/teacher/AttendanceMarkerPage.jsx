@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Box,
   Card,
@@ -33,7 +33,7 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material';
-import { CheckCircle, QrCode, People, Timer, Refresh, History, Delete, Lock, Visibility, Save } from '@mui/icons-material';
+import { CheckCircle, QrCode, People, Timer, Refresh, History, Delete, Lock, Visibility, Save, FiberManualRecord } from '@mui/icons-material';
 import { QRCode } from 'react-qr-code';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { useAuth } from '../../contexts/AuthContext';
@@ -89,6 +89,10 @@ export default function AttendanceMarkerPage() {
   // Past attendance records states
   const [pastRecords, setPastRecords] = useState([]);
   const [pastLoading, setPastLoading] = useState(false);
+
+  // Live poll indicator
+  const [livePolling, setLivePolling] = useState(false);
+  const pollIntervalRef = useRef(null);
   const getStatusColor = (status) => {
     if (!status) return 'default';
     const s = status.toLowerCase();
@@ -121,9 +125,11 @@ export default function AttendanceMarkerPage() {
     }
   }, [accessToken, user?.id]);
 
-  const loadAttendanceStates = async () => {
+  const loadAttendanceStatesRef = useRef(null);
+
+  const loadAttendanceStates = useCallback(async (silent = false) => {
     if (!selectedCourseId || !attendanceDate) return;
-    setStudentsLoading(true);
+    if (!silent) setStudentsLoading(true);
     try {
       setAuthHeader(accessToken);
       const [studentsRes, recordsRes, reqsRes] = await Promise.all([
@@ -139,7 +145,16 @@ export default function AttendanceMarkerPage() {
       const initial = {};
       const dbRecsMap = {};
       studentList.forEach((s) => {
-        const dbRec = existing.find(r => String(r.student) === String(s.id) || String(r.studentId) === String(s.id));
+        // Prefer records with a status (QR or manual) over empty ones
+        // If multiple records exist for the same student, prefer Present/QR over others
+        const allRecs = existing.filter(r => String(r.student) === String(s.id) || String(r.studentId) === String(s.id));
+        let dbRec = null;
+        if (allRecs.length > 0) {
+          // Prefer Present status (from QR), then any non-empty status
+          dbRec = allRecs.find(r => r.status && r.status.toLowerCase() === 'present')
+                  || allRecs.find(r => r.status)
+                  || allRecs[0];
+        }
         initial[s.id] = dbRec ? dbRec.status.toLowerCase() : '';
         if (dbRec) {
           dbRecsMap[s.id] = dbRec;
@@ -156,12 +171,45 @@ export default function AttendanceMarkerPage() {
       });
       setPendingRequests(pendingMap);
     } catch (err) {
-      console.error(err);
-      toast.error('Failed to load attendance directory');
+      if (!silent) {
+        console.error(err);
+        toast.error('Failed to load attendance directory');
+      }
     } finally {
-      setStudentsLoading(false);
+      if (!silent) setStudentsLoading(false);
     }
-  };
+  }, [selectedCourseId, attendanceDate, accessToken]);
+
+  // Keep a ref to always have latest loadAttendanceStates (avoids stale closure in interval)
+  useEffect(() => {
+    loadAttendanceStatesRef.current = loadAttendanceStates;
+  });
+
+  // ── Live polling: auto-refresh attendance every 8s on manual tab ──────────
+  useEffect(() => {
+    const shouldPoll = activeTab === 0 && selectedCourseId && attendanceDate && accessToken;
+    if (shouldPoll) {
+      setLivePolling(true);
+      pollIntervalRef.current = setInterval(() => {
+        // Always call via ref so we never use a stale closure
+        if (loadAttendanceStatesRef.current) {
+          loadAttendanceStatesRef.current(true);
+        }
+      }, 8000);
+    } else {
+      setLivePolling(false);
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    }
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    };
+  }, [activeTab, selectedCourseId, attendanceDate, accessToken]);
 
   useEffect(() => {
     if (selectedCourseId && attendanceDate && accessToken) {
@@ -481,7 +529,15 @@ export default function AttendanceMarkerPage() {
         <Card sx={{ borderRadius: '16px', border: '1px solid', borderColor: 'divider' }}>
           <CardContent sx={{ p: 0 }}>
             <Box sx={{ p: 2.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-              <Typography variant="h6" sx={{ fontWeight: 800 }}>Enrolled Student List</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Typography variant="h6" sx={{ fontWeight: 800 }}>Enrolled Student List</Typography>
+                {livePolling && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, px: 1.2, py: 0.4, borderRadius: '20px', bgcolor: 'rgba(76,175,80,0.12)', border: '1px solid rgba(76,175,80,0.4)' }}>
+                    <FiberManualRecord sx={{ fontSize: 10, color: '#4CAF50', animation: 'pulse 1.5s ease-in-out infinite', '@keyframes pulse': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.3 } } }} />
+                    <Typography variant="caption" sx={{ fontWeight: 700, color: '#4CAF50', lineHeight: 1 }}>LIVE</Typography>
+                  </Box>
+                )}
+              </Box>
             </Box>
 
             <Divider />
