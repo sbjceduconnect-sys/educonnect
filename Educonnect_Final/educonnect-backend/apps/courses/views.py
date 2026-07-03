@@ -107,12 +107,21 @@ class CourseEnrollView(APIView):
         course.students.add(*student_ids)
         return api_success(message=f"Successfully enrolled {len(student_ids)} students.")
 
-    def delete(self, request, pk, student_id):
+    def delete(self, request, pk, student_id=None):
         if not IsAdminOrTeacher().has_permission(request, self):
             return api_error("Permission denied.", status=403)
         course = self._get(pk)
         if not course:
             return api_error("Course not found.", status=404)
+
+        target_id = student_id or request.query_params.get('student_id') or request.query_params.get('studentId') or request.data.get('student_id') or request.data.get('studentId')
+        if not target_id:
+            return api_error("Student ID is required.", status=400)
+            
+        try:
+            target_id_int = int(target_id)
+        except ValueError:
+            return api_error("Invalid student ID format.", status=400)
             
         # If course.students has never been populated, seed it with default students first
         if not course.students.exists():
@@ -125,7 +134,7 @@ class CourseEnrollView(APIView):
             if initial_students.exists():
                 course.students.add(*initial_students)
 
-        course.students.remove(student_id)
+        course.students.remove(target_id_int)
         return api_success(message="Student removed from course.")
 
 

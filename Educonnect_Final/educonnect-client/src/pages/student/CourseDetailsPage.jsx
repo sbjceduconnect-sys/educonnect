@@ -200,14 +200,18 @@ export default function CourseDetailsPage() {
     try {
       setAuthHeader(accessToken);
       await courseApi.removeStudent(selectedCourse.id, studentId);
-      toast.success('Student removed from enrollment');
+      toast.success('Student removed from course enrollment');
       
-      // Refresh enrolled list
+      // Optimistically update local state so student disappears immediately
+      setEnrolledStudents((prev) => prev.filter((s) => s.id !== studentId));
+      
+      // Refresh enrolled list from backend
       const enrolledRes = await courseApi.getStudents(selectedCourse.id);
       setEnrolledStudents(enrolledRes.data.data || []);
       fetchData();
     } catch (err) {
-      toast.error('Failed to remove student');
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to remove student');
     }
   };
 
