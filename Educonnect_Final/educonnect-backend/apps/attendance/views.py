@@ -164,12 +164,12 @@ class ScanQRView(APIView):
         except ActiveQRCode.DoesNotExist:
             return api_error("Invalid or expired QR token.", status=400)
             
-        # Check if record already exists
-        filter_kwargs = {
-            'student': request.user,
-            'course': active_qr.course,
-            'date': timezone.localdate()
-        }
+        today = timezone.localdate()
+        student = request.user
+        course = active_qr.course
+
+        # ── 1. Upsert the primary QR record (course-level or specific subject) ──
+        filter_kwargs = {'student': student, 'course': course, 'date': today}
         if active_qr.subject:
             filter_kwargs['subject'] = active_qr.subject
         else:
@@ -179,19 +179,65 @@ class ScanQRView(APIView):
 
         if existing_record:
             if existing_record.status.capitalize() == 'Present':
-                return api_success(message="Attendance marked successfully via QR Code!")
+                pass  # already present — still sync subjects below
+            elif existing_record.is_draft:
+                existing_record.status = 'Present'
+                existing_record.method = 'qr'
+                existing_record.marked_by = student
+                existing_record.is_draft = False
+                existing_record.save()
             else:
+                # Locked non-Present record — do not overwrite
                 return api_error("Attendance record is locked. Cannot overwrite submitted attendance.", status=400)
+        else:
+            AttendanceRecord.objects.create(
+                student=student,
+                course=course,
+                subject=active_qr.subject,
+                date=today,
+                status='Present',
+                method='qr',
+                marked_by=student,
+                is_draft=False,
+            )
 
-        obj = AttendanceRecord.objects.create(
-            student=request.user,
-            course=active_qr.course,
-            subject=active_qr.subject,
-            date=timezone.localdate(),
-            status='Present',
-            method='qr',
-            marked_by=request.user
-        )
+        # ── 2. Sync Present to all subjects of this course's department for this student ──
+        # This ensures the student shows as Present in every subject-level manual view.
+        course_subjects = []
+        try:
+            from apps.subjects.models import Subject
+            if course.department_id:
+                course_subjects = list(Subject.objects.filter(department_id=course.department_id))
+        except Exception:
+            course_subjects = []
+
+        for subject in course_subjects:
+            if active_qr.subject and active_qr.subject.id == subject.id:
+                continue  # already handled above
+            subj_rec = AttendanceRecord.objects.filter(
+                student=student, course=course, subject=subject, date=today
+            ).first()
+            if subj_rec:
+                # Only update if it's a draft (unsubmitted) — don't overwrite locked records
+                if subj_rec.is_draft:
+                    subj_rec.status = 'Present'
+                    subj_rec.method = 'qr'
+                    subj_rec.marked_by = student
+                    subj_rec.save()
+                # If already Present or locked, leave it
+            else:
+                # No record yet — create a draft-false present via QR for this subject
+                AttendanceRecord.objects.create(
+                    student=student,
+                    course=course,
+                    subject=subject,
+                    date=today,
+                    status='Present',
+                    method='qr',
+                    marked_by=student,
+                    is_draft=False,
+                )
+
         return api_success(message="Attendance marked successfully via QR Code!")
 
 
