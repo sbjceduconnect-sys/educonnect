@@ -17,8 +17,17 @@ class CamelCaseSerializerMixin:
             if field_name in converted_data:
                 val = converted_data[field_name]
                 if val in ('', 'null', 'undefined'):
-                    if getattr(field, 'allow_null', False) or not getattr(field, 'required', True) or not isinstance(field, serializers.CharField):
-                        converted_data[field_name] = None
+                    if isinstance(field, serializers.CharField):
+                        if getattr(field, 'allow_null', False):
+                            if val in ('null', 'undefined') or not getattr(field, 'allow_blank', False):
+                                converted_data[field_name] = None
+                            else:
+                                converted_data[field_name] = ''
+                        elif getattr(field, 'allow_blank', False):
+                            converted_data[field_name] = ''
+                    else:
+                        if getattr(field, 'allow_null', False) or not getattr(field, 'required', True):
+                            converted_data[field_name] = None
                     
         return super().to_internal_value(converted_data)
 
