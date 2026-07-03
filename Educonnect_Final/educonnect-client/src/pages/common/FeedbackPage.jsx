@@ -158,12 +158,19 @@ export default function FeedbackPage() {
     }
   };
 
-  // Compile unique teachers list from student enrolled courses
+  // Compile unique individual teachers list from student enrolled courses
   const studentTeachers = [];
   courses.forEach(c => {
-    if (c.teacherId && c.teacherName && c.teacherName !== 'Not Assigned') {
-      if (!studentTeachers.some(t => t.id === c.teacherId)) {
-        studentTeachers.push({ id: c.teacherId, name: c.teacherName });
+    if (Array.isArray(c.teachers) && c.teachers.length > 0) {
+      c.teachers.forEach(t => {
+        if (t.id && t.name && !studentTeachers.some(st => String(st.id) === String(t.id))) {
+          studentTeachers.push({ id: t.id, name: t.name });
+        }
+      });
+    } else if (c.teacherId && c.teacherName && c.teacherName !== 'Not Assigned') {
+      const names = c.teacherName.split(',').map(n => n.trim());
+      if (names.length === 1 && !studentTeachers.some(st => String(st.id) === String(c.teacherId))) {
+        studentTeachers.push({ id: c.teacherId, name: names[0] });
       }
     }
   });
