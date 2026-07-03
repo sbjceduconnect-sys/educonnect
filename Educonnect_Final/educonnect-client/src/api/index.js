@@ -172,9 +172,9 @@ export const officeHourApi = {
 };
 
 export const dashboardApi = {
-  student: () => api.get('/dashboard/student'),
-  teacher: () => api.get('/dashboard/teacher'),
-  admin: () => api.get('/dashboard/admin'),
+  student: () => api.get('/dashboard/student/'),
+  teacher: () => api.get('/dashboard/teacher/'),
+  admin: () => api.get('/dashboard/admin/'),
 };
 
 export const aiApi = {

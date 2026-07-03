@@ -105,76 +105,7 @@ export default function TeacherDashboard() {
         </Grid>
       </Grid>
 
-      {/* Course Showbar Section */}
-      <Card sx={{ borderRadius: '16px', mb: 4, border: '1px solid', borderColor: 'divider' }}>
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 800 }}>Assigned Courses Showbar</Typography>
-              <Typography variant="body2" color="text.secondary">Active courses assigned to your profile</Typography>
-            </Box>
-            <Button
-              size="small"
-              endIcon={<ArrowForward />}
-              onClick={() => navigate('/courses')}
-              sx={{ fontWeight: 700 }}
-            >
-              View All Courses
-            </Button>
-          </Box>
 
-          {data?.courses && data.courses.length > 0 ? (
-            <Grid container spacing= {2}>
-              {data.courses.map((course) => {
-                const count = course.enrolledStudentIds?.length || 0;
-                return (
-                  <Grid item xs={12} sm={6} md={4} key={course.id}>
-                    <Paper
-                      variant="outlined"
-                      onClick={() => navigate('/courses')}
-                      sx={{
-                        p: 2,
-                        borderRadius: '12px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          borderColor: 'primary.main',
-                          boxShadow: '0 4px 12px rgba(108,99,255,0.15)',
-                          transform: 'translateY(-2px)'
-                        }
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                        <Chip
-                          label={course.courseCode || 'COURSE'}
-                          size="small"
-                          color="primary"
-                          sx={{ fontWeight: 700, borderRadius: '6px' }}
-                        />
-                        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
-                          {count} Students
-                        </Typography>
-                      </Box>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                        {course.title}
-                      </Typography>
-                      <LinearProgress
-                        variant="determinate"
-                        value={Math.min(100, (count / Math.max(1, data?.totalStudents || 1)) * 100)}
-                        sx={{ height: 6, borderRadius: 3 }}
-                      />
-                    </Paper>
-                  </Grid>
-                );
-              })}
-            </Grid>
-          ) : (
-            <Box sx={{ py: 3, textAlign: 'center' }}>
-              <Typography color="text.secondary">No courses assigned to your profile yet.</Typography>
-            </Box>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Main Grid: Chart & Quick Actions */}
       <Grid container spacing={3}>
