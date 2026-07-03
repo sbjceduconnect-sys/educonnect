@@ -49,6 +49,22 @@ export default function AttendanceMarkerPage() {
   const { user, accessToken } = useAuth();
   const { requestCameraPermission, isNative } = useAppPermissions();
 
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'present':
+        return 'success';
+      case 'absent':
+        return 'error';
+      case 'late':
+        return 'warning';
+      case 'excused':
+      case 'half_day':
+        return 'info';
+      default:
+        return 'default';
+    }
+  };
+
   const [activeTab, setActiveTab] = useState(0);
   const [courses, setCourses] = useState([]);
   const [selectedCourseId, setSelectedCourseId] = useState('');

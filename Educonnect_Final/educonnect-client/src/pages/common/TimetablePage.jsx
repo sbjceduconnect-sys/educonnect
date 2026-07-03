@@ -417,8 +417,9 @@ export default function TimetablePage() {
   };
 
   const getTeacherName = (id) => {
+    if (!id) return 'Unassigned';
     const t = teachers.find((u) => u.id === id);
-    return t ? `${t.firstName} ${t.lastName}` : 'Unknown Teacher';
+    return t ? `${t.firstName} ${t.lastName}` : 'Unassigned';
   };
 
   const getDeptName = (id) => {
@@ -1105,9 +1106,13 @@ export default function TimetablePage() {
                         <TableCell>
                           <FormControl fullWidth size="small">
                             <Select
-                              value={slot.teacherId}
+                              value={slot.teacherId || ''}
                               onChange={(e) => handleSlotChange(index, 'teacherId', e.target.value)}
+                              displayEmpty
                             >
+                              <MenuItem value="">
+                                <em>None (Unassigned)</em>
+                              </MenuItem>
                               {teachers.map((t) => (
                                 <MenuItem key={t.id} value={t.id}>{t.firstName} {t.lastName}</MenuItem>
                               ))}

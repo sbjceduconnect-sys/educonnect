@@ -20,7 +20,8 @@ class ExamListView(APIView):
         if course: 
             qs = qs.filter(course_id=course)
         if teacher_id:
-            qs = qs.filter(course__teacher_id=teacher_id)
+            from django.db.models import Q
+            qs = qs.filter(Q(course__teacher_id=teacher_id) | Q(subject__teacher_id=teacher_id) | Q(course__teacher__isnull=True))
         if student_id:
             qs = qs.filter(course__students__id=student_id)
             

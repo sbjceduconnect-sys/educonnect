@@ -57,8 +57,8 @@ export default function ExamManagerPage() {
       // Fetch teacher's exams, subjects, and courses
       const [examRes, courseRes, subjectRes] = await Promise.all([
         examApi.list({ teacherId: user.role === 'admin' ? undefined : user.id }),
-        courseApi.list({ teacherId: user.role === 'admin' ? undefined : user.id }),
-        subjectApi.list({ teacherId: user.role === 'admin' ? undefined : user.id }),
+        courseApi.list(),
+        subjectApi.list(),
       ]);
 
       setExams(examRes.data.data || []);
@@ -319,7 +319,7 @@ export default function ExamManagerPage() {
                 onChange={(e) => setFormData({ ...formData, subjectId: e.target.value })}
                 sx={{ borderRadius: '10px' }}
               >
-                {subjects.filter(s => user?.role !== 'teacher' || String(s.teacherId) === String(user.id)).map((subj) => (
+                {subjects.map((subj) => (
                   <MenuItem key={subj.id} value={subj.id}>
                     {subj.name} ({subj.code})
                   </MenuItem>

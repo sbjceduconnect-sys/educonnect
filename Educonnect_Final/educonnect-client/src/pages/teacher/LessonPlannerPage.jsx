@@ -52,9 +52,9 @@ export default function LessonPlannerPage() {
     try {
       setAuthHeader(accessToken);
       const [planRes, courseRes, subjectRes] = await Promise.all([
-        lessonPlanApi.list({ teacherId: user.id }),
-        courseApi.list({ teacherId: user.id }),
-        subjectApi.list({ teacherId: user.id }),
+        lessonPlanApi.list({ teacherId: user.role === 'admin' ? undefined : user.id }),
+        courseApi.list(),
+        subjectApi.list(),
       ]);
 
       setPlans(planRes.data.data || []);
@@ -271,7 +271,7 @@ export default function LessonPlannerPage() {
                 onChange={(e) => setFormData({ ...formData, subjectId: e.target.value })}
                 sx={{ borderRadius: '10px' }}
               >
-                {subjects.filter(s => user?.role !== 'teacher' || String(s.teacherId) === String(user.id)).map((subj) => (
+                {subjects.map((subj) => (
                   <MenuItem key={subj.id} value={subj.id}>
                     {subj.name} ({subj.code})
                   </MenuItem>
