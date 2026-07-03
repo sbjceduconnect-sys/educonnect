@@ -251,7 +251,7 @@ export default function LessonPlannerPage() {
                 labelId="plan-course-label"
                 value={formData.courseId}
                 label="Target Class"
-                onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, courseId: e.target.value, subjectId: '' })}
                 sx={{ borderRadius: '10px' }}
               >
                 {courses.map((course) => (
@@ -272,16 +272,24 @@ export default function LessonPlannerPage() {
                 sx={{ borderRadius: '10px' }}
               >
                 {(() => {
-                  const selectedCourse = courses.find(c => c.id === formData.courseId);
-                  const filtered = selectedCourse
-                    ? subjects.filter(s => !s.departmentId || String(s.departmentId) === String(selectedCourse.departmentId))
-                    : subjects;
-                  const displaySubjects = filtered.length > 0 ? filtered : subjects;
-                  return displaySubjects.map((subj) => (
-                    <MenuItem key={subj.id} value={subj.id}>
-                      {subj.name} ({subj.code})
-                    </MenuItem>
-                  ));
+                  const selCourse = courses.find((c) => String(c.id) === String(formData.courseId));
+                  const courseDeptId = selCourse?.departmentId || selCourse?.department;
+                  return subjects
+                    .filter((s) => {
+                      if (user?.role === 'teacher' && s.teacherId && String(s.teacherId) !== String(user.id)) {
+                        return false;
+                      }
+                      if (courseDeptId) {
+                        const sDept = s.departmentId || s.department;
+                        return String(sDept) === String(courseDeptId);
+                      }
+                      return true;
+                    })
+                    .map((subj) => (
+                      <MenuItem key={subj.id} value={subj.id}>
+                        {subj.name} ({subj.code})
+                      </MenuItem>
+                    ));
                 })()}
               </Select>
             </FormControl>
