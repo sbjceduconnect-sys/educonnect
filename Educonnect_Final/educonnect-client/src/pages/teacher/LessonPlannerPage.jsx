@@ -52,7 +52,7 @@ export default function LessonPlannerPage() {
     try {
       setAuthHeader(accessToken);
       const [planRes, courseRes, subjectRes] = await Promise.all([
-        lessonPlanApi.list({ teacherId: user.role === 'admin' ? undefined : user.id }),
+        lessonPlanApi.list({ teacherId: user.id }),
         courseApi.list(),
         subjectApi.list(),
       ]);
@@ -271,11 +271,18 @@ export default function LessonPlannerPage() {
                 onChange={(e) => setFormData({ ...formData, subjectId: e.target.value })}
                 sx={{ borderRadius: '10px' }}
               >
-                {subjects.map((subj) => (
-                  <MenuItem key={subj.id} value={subj.id}>
-                    {subj.name} ({subj.code})
-                  </MenuItem>
-                ))}
+                {(() => {
+                  const selectedCourse = courses.find(c => c.id === formData.courseId);
+                  const filtered = selectedCourse
+                    ? subjects.filter(s => !s.departmentId || String(s.departmentId) === String(selectedCourse.departmentId))
+                    : subjects;
+                  const displaySubjects = filtered.length > 0 ? filtered : subjects;
+                  return displaySubjects.map((subj) => (
+                    <MenuItem key={subj.id} value={subj.id}>
+                      {subj.name} ({subj.code})
+                    </MenuItem>
+                  ));
+                })()}
               </Select>
             </FormControl>
 

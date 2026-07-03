@@ -49,22 +49,6 @@ export default function AttendanceMarkerPage() {
   const { user, accessToken } = useAuth();
   const { requestCameraPermission, isNative } = useAppPermissions();
 
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'present':
-        return 'success';
-      case 'absent':
-        return 'error';
-      case 'late':
-        return 'warning';
-      case 'excused':
-      case 'half_day':
-        return 'info';
-      default:
-        return 'default';
-    }
-  };
-
   const [activeTab, setActiveTab] = useState(0);
   const [courses, setCourses] = useState([]);
   const [selectedCourseId, setSelectedCourseId] = useState('');
@@ -104,7 +88,14 @@ export default function AttendanceMarkerPage() {
 
   // Past attendance records states
   const [pastRecords, setPastRecords] = useState([]);
-  const [pastLoading, setPastLoading] = useState(false);
+  const getStatusColor = (status) => {
+    if (!status) return 'default';
+    const s = status.toLowerCase();
+    if (s === 'present') return 'success';
+    if (s === 'absent') return 'error';
+    if (s === 'late') return 'warning';
+    return 'default';
+  };
 
   // Camera permission rationale dialog state
   // The dialog is shown once before the native OS permission prompt fires.

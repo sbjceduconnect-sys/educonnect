@@ -319,11 +319,18 @@ export default function ExamManagerPage() {
                 onChange={(e) => setFormData({ ...formData, subjectId: e.target.value })}
                 sx={{ borderRadius: '10px' }}
               >
-                {subjects.map((subj) => (
-                  <MenuItem key={subj.id} value={subj.id}>
-                    {subj.name} ({subj.code})
-                  </MenuItem>
-                ))}
+                {(() => {
+                  const selectedCourse = courses.find(c => c.id === formData.courseId);
+                  const filtered = selectedCourse
+                    ? subjects.filter(s => !s.departmentId || String(s.departmentId) === String(selectedCourse.departmentId))
+                    : subjects;
+                  const displaySubjects = filtered.length > 0 ? filtered : subjects;
+                  return displaySubjects.map((subj) => (
+                    <MenuItem key={subj.id} value={subj.id}>
+                      {subj.name} ({subj.code})
+                    </MenuItem>
+                  ));
+                })()}
               </Select>
             </FormControl>
 
