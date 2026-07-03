@@ -33,14 +33,14 @@ export const departmentApi = {
 };
 
 export const courseApi = {
-  list: (params) => api.get('/courses', { params }),
-  get: (id) => api.get(`/courses/${id}`),
-  create: (data) => api.post('/courses', data),
-  update: (id, data) => api.put(`/courses/${id}`, data),
-  delete: (id) => api.delete(`/courses/${id}`),
-  enrollStudents: (id, studentIds) => api.post(`/courses/${id}/enroll`, { studentIds }),
-  removeStudent: (id, studentId) => api.delete(`/courses/${id}/enroll/${studentId}`),
-  getStudents: (id) => api.get(`/courses/${id}/students`),
+  list: (params) => api.get('/courses/', { params }),
+  get: (id) => api.get(`/courses/${id}/`),
+  create: (data) => api.post('/courses/', data),
+  update: (id, data) => api.put(`/courses/${id}/`, data),
+  delete: (id) => api.delete(`/courses/${id}/`),
+  enrollStudents: (id, studentIds) => api.post(`/courses/${id}/enroll/`, { studentIds }),
+  removeStudent: (id, studentId) => api.delete(`/courses/${id}/enroll/${studentId}/`),
+  getStudents: (id) => api.get(`/courses/${id}/students/`),
 };
 
 export const subjectApi = {
