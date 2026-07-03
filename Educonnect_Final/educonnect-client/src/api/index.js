@@ -75,20 +75,20 @@ export const assignmentApi = {
 };
 
 export const attendanceApi = {
-  list: (params) => api.get('/attendance', { params }),
-  mark: (data) => api.post('/attendance', data),
-  generateQR: (data) => api.post('/attendance/qr/generate', data),
-  scanQR: (token) => api.post('/attendance/qr/scan', { token }),
-  getBySubject: (subjectId, params) => api.get(`/attendance/subject/${subjectId}`, { params }),
-  getByCourse: (courseId, params) => api.get(`/attendance/course/${courseId}`, { params }),
-  getStudent: (studentId, params) => api.get(`/attendance/student/${studentId}`, { params }),
-  getSummary: (studentId) => api.get(`/attendance/student/${studentId}/summary`),
-  update: (id, data) => api.put(`/attendance/${id}`, data),
-  getReports: (params) => api.get('/attendance/reports', { params }),
-  delete: (id) => api.delete(`/attendance/${id}`),
-  listEditRequests: (params) => api.get('/attendance/edit-requests', { params }),
-  createEditRequest: (data) => api.post('/attendance/edit-requests', data),
-  actionEditRequest: (id, action) => api.patch(`/attendance/edit-requests/${id}/action`, { action }),
+  list: (params) => api.get('/attendance/', { params }),
+  mark: (data) => api.post('/attendance/', data),
+  generateQR: (data) => api.post('/attendance/qr/generate/', data),
+  scanQR: (token) => api.post('/attendance/qr/scan/', { token }),
+  getBySubject: (subjectId, params) => api.get(`/attendance/subject/${subjectId}/`, { params }),
+  getByCourse: (courseId, params) => api.get(`/attendance/course/${courseId}/`, { params }),
+  getStudent: (studentId, params) => api.get(`/attendance/student/${studentId}/`, { params }),
+  getSummary: (studentId) => api.get(`/attendance/student/${studentId}/summary/`),
+  update: (id, data) => api.put(`/attendance/${id}/`, data),
+  getReports: (params) => api.get('/attendance/reports/', { params }),
+  delete: (id) => api.delete(`/attendance/${id}/`),
+  listEditRequests: (params) => api.get('/attendance/edit-requests/', { params }),
+  createEditRequest: (data) => api.post('/attendance/edit-requests/', data),
+  actionEditRequest: (id, action) => api.patch(`/attendance/edit-requests/${id}/action/`, { action }),
 };
 
 export const examApi = {

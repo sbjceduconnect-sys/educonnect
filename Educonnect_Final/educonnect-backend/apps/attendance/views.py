@@ -128,10 +128,12 @@ class GenerateQRView(APIView):
     def post(self, request):
         course_id = request.data.get('course_id') or request.data.get('courseId')
         subject_id = request.data.get('subject_id') or request.data.get('subjectId')
+        if not subject_id or subject_id in ('null', 'undefined', ''):
+            subject_id = None
         duration = int(request.data.get('duration_minutes') or request.data.get('durationMinutes') or 10)
         
-        if not course_id or not subject_id:
-            return api_error("course_id and subject_id are required.", status=400)
+        if not course_id:
+            return api_error("course_id is required.", status=400)
             
         token = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
         expires_at = timezone.now() + timedelta(minutes=duration)
@@ -159,12 +161,17 @@ class ScanQRView(APIView):
             return api_error("Invalid or expired QR token.", status=400)
             
         # Check if record already exists
-        existing_record = AttendanceRecord.objects.filter(
-            student=request.user,
-            course=active_qr.course,
-            subject=active_qr.subject,
-            date=timezone.localdate()
-        ).first()
+        filter_kwargs = {
+            'student': request.user,
+            'course': active_qr.course,
+            'date': timezone.localdate()
+        }
+        if active_qr.subject:
+            filter_kwargs['subject'] = active_qr.subject
+        else:
+            filter_kwargs['subject__isnull'] = True
+
+        existing_record = AttendanceRecord.objects.filter(**filter_kwargs).first()
 
         if existing_record:
             if existing_record.status.capitalize() == 'Present':

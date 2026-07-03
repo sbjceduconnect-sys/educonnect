@@ -35,7 +35,7 @@ class AttendanceRecord(models.Model):
 class ActiveQRCode(models.Model):
     token = models.CharField(max_length=6, unique=True)
     course = models.ForeignKey('courses.Course', on_delete=models.CASCADE)
-    subject = models.ForeignKey('subjects.Subject', on_delete=models.CASCADE)
+    subject = models.ForeignKey('subjects.Subject', on_delete=models.CASCADE, null=True, blank=True)
     expires_at = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
 
