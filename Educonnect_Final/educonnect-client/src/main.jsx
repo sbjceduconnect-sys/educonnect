@@ -1,3 +1,24 @@
+// Safe DOM guard to prevent React NotFoundError: Failed to execute 'removeChild' on 'Node'
+if (typeof window !== 'undefined' && typeof Node !== 'undefined' && Node.prototype) {
+  const originalRemoveChild = Node.prototype.removeChild;
+  Node.prototype.removeChild = function (child) {
+    if (child && child.parentNode !== this) {
+      if (console) console.warn('Cannot remove child, parent is not current node:', child);
+      return child;
+    }
+    return originalRemoveChild.call(this, child);
+  };
+
+  const originalInsertBefore = Node.prototype.insertBefore;
+  Node.prototype.insertBefore = function (newNode, referenceNode) {
+    if (referenceNode && referenceNode.parentNode !== this) {
+      if (console) console.warn('Cannot insert child, reference parent is not current node:', referenceNode);
+      return newNode;
+    }
+    return originalInsertBefore.call(this, newNode, referenceNode);
+  };
+}
+
 console.log('MAIN.JSX: Script loaded.');
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
