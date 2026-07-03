@@ -451,25 +451,30 @@ class TeacherDashboardView(APIView):
         from apps.subjects.models import Subject
         from apps.courses.models import Course
         from apps.announcements.models import Announcement
+        from django.db.models import Q
         
         teacher = request.user
-        subjects = Subject.objects.filter(teacher=teacher)
-        total_subjects = subjects.count()
+        
+        # Assigned subjects count
+        assigned_subjects = Subject.objects.filter(teacher=teacher)
+        total_subjects = assigned_subjects.count()
         if total_subjects == 0:
             total_subjects = Subject.objects.count()
-            if total_subjects == 0:
-                total_subjects = Course.objects.count()
 
-        course_ids = subjects.values_list('course_id', flat=True).distinct()
-        courses = Course.objects.filter(id__in=course_ids)
-        if not courses.exists():
-            courses = Course.objects.all()
+        # Assigned courses count (M2M teachers OR ForeignKey teacher OR subjects)
+        assigned_courses = Course.objects.filter(
+            Q(teachers=teacher) | Q(teacher=teacher) | Q(subject__teacher=teacher)
+        ).distinct()
+        total_courses = assigned_courses.count()
+        if total_courses == 0:
+            total_courses = Course.objects.count()
+            assigned_courses = Course.objects.all()
 
         total_students = User.objects.filter(role='student').count()
         announcements = Announcement.objects.all().order_by('-created_at')[:5]
         
         serialized_courses = []
-        for course in courses:
+        for course in assigned_courses:
             student_count = course.students.filter(role='student').count()
             if student_count == 0:
                 student_count = total_students
@@ -482,7 +487,7 @@ class TeacherDashboardView(APIView):
             
         return api_success(data={
             "totalSubjects": total_subjects,
-            "totalCourses": total_subjects,
+            "totalCourses": total_courses,
             "totalStudents": total_students,
             "courses": serialized_courses,
             "announcements": list(announcements.values('id', 'title', 'created_at'))
