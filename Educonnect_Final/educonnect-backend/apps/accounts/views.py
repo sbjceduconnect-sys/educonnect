@@ -454,12 +454,18 @@ class TeacherDashboardView(APIView):
         
         teacher = request.user
         subjects = Subject.objects.filter(teacher=teacher)
+        total_subjects = subjects.count()
+        if total_subjects == 0:
+            total_subjects = Subject.objects.count()
+            if total_subjects == 0:
+                total_subjects = Course.objects.count()
+
         course_ids = subjects.values_list('course_id', flat=True).distinct()
         courses = Course.objects.filter(id__in=course_ids)
         if not courses.exists():
             courses = Course.objects.all()
 
-        total_students = User.objects.filter(role='student', is_approved=True).count()
+        total_students = User.objects.filter(role='student').count()
         announcements = Announcement.objects.all().order_by('-created_at')[:5]
         
         serialized_courses = []
@@ -475,8 +481,8 @@ class TeacherDashboardView(APIView):
             })
             
         return api_success(data={
-            "totalSubjects": subjects.count() or Course.objects.count(),
-            "totalCourses": subjects.count() or Course.objects.count(),
+            "totalSubjects": total_subjects,
+            "totalCourses": total_subjects,
             "totalStudents": total_students,
             "courses": serialized_courses,
             "announcements": list(announcements.values('id', 'title', 'created_at'))
