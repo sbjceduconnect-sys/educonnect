@@ -6,25 +6,35 @@ from apps.accounts.serializers import UserSerializer
 from .models import Course
 from .serializers import CourseSerializer
 
+from django.db.models import Q
+
 class CourseListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         qs = Course.objects.all()
+        user = request.user
         
         # Support filtering by teacher, student, or department
         teacher_id = request.query_params.get('teacher_id') or request.query_params.get('teacherId')
         student_id = request.query_params.get('student_id') or request.query_params.get('studentId')
         department_id = request.query_params.get('department_id') or request.query_params.get('departmentId')
+        fetch_all = request.query_params.get('all')
         
+        # Filter by teacher's assigned courses if user is teacher
+        if user.role == 'teacher' and not fetch_all:
+            assigned = qs.filter(Q(teachers=user) | Q(teacher=user)).distinct()
+            if assigned.exists():
+                qs = assigned
+
         if teacher_id:
-            qs = qs.filter(teacher_id=teacher_id)
+            qs = qs.filter(Q(teachers__id=teacher_id) | Q(teacher_id=teacher_id)).distinct()
         if student_id:
             qs = qs.filter(students__id=student_id)
         if department_id:
             qs = qs.filter(department_id=department_id)
             
-        return api_success(data=CourseSerializer(qs, many=True).data)
+        return api_success(data=CourseSerializer(qs.distinct(), many=True).data)
 
     def post(self, request):
         if not IsAdminOrTeacher().has_permission(request, self):

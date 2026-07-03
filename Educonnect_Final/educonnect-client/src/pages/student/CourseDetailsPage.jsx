@@ -23,6 +23,7 @@ import {
   ListItemText,
   ListItemSecondaryAction,
   CardActions,
+  Checkbox,
   Avatar,
   Tab,
   Tabs,
@@ -126,7 +127,7 @@ export default function CourseDetailsPage() {
       title: '',
       courseCode: '',
       departmentId: '',
-      teacherId: '',
+      teacherIds: [],
       academicYear: '2026-27',
       isActive: true,
     });
@@ -136,11 +137,12 @@ export default function CourseDetailsPage() {
 
   const handleOpenEdit = (course) => {
     setSelectedCourse(course);
+    const assignedIds = course.teachers?.map(t => t.id) || (course.teacherId ? [course.teacherId] : []);
     setFormData({
       title: course.title || '',
       courseCode: course.courseCode || '',
       departmentId: course.departmentId || '',
-      teacherId: course.teacherId || '',
+      teacherIds: assignedIds,
       academicYear: course.academicYear || '2026-27',
       isActive: course.isActive !== false,
     });
@@ -270,6 +272,24 @@ export default function CourseDetailsPage() {
       headerName: 'Students Enrolled',
       flex: 0.8,
       valueGetter: ({ row }) => row.enrolledCount ?? row.enrolledStudentIds?.length ?? 0,
+    },
+    {
+      field: 'teachers',
+      headerName: 'Assigned Teachers',
+      flex: 1.5,
+      renderCell: ({ row }) => {
+        const teacherList = row.teachers?.length
+          ? row.teachers
+          : (row.teacherName && row.teacherName !== 'Not Assigned' ? [{ name: row.teacherName }] : []);
+        if (teacherList.length === 0) return <Typography variant="caption" color="text.secondary">Not Assigned</Typography>;
+        return (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            {teacherList.map((t, idx) => (
+              <Chip key={t.id || idx} label={t.name || `${t.firstName} ${t.lastName}`} size="small" color="primary" variant="outlined" />
+            ))}
+          </Box>
+        );
+      }
     },
     {
       field: 'actions',
@@ -425,6 +445,38 @@ export default function CourseDetailsPage() {
                 ))}
               </Select>
               {formErrors.departmentId && <FormHelperText>{formErrors.departmentId}</FormHelperText>}
+            </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel id="select-teachers-label">Assigned Teachers</InputLabel>
+              <Select
+                labelId="select-teachers-label"
+                multiple
+                value={formData.teacherIds || []}
+                label="Assigned Teachers"
+                onChange={(e) => {
+                  const val = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value;
+                  setFormData({ ...formData, teacherIds: val });
+                }}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((value) => {
+                      const t = teachers.find(item => item.id === value);
+                      return (
+                        <Chip key={value} label={t ? `${t.firstName} ${t.lastName}` : value} size="small" color="primary" />
+                      );
+                    })}
+                  </Box>
+                )}
+                sx={{ borderRadius: '10px' }}
+              >
+                {teachers.map((t) => (
+                  <MenuItem key={t.id} value={t.id}>
+                    <Checkbox checked={(formData.teacherIds || []).indexOf(t.id) > -1} />
+                    <ListItemText primary={`${t.firstName} ${t.lastName}`} secondary={t.email} />
+                  </MenuItem>
+                ))}
+              </Select>
             </FormControl>
 
             <TextField
