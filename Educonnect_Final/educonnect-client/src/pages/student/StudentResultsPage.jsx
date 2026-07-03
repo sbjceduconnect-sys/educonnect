@@ -20,7 +20,7 @@ import {
   useTheme,
   Alert,
 } from '@mui/material';
-import { PictureAsPdf, Assessment, Star, TrendingUp, Book, Lock } from '@mui/icons-material';
+import { PictureAsPdf, Assessment, Star, TrendingUp, Book, Lock, Refresh } from '@mui/icons-material';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useAuth } from '../../contexts/AuthContext';
 import { resultApi, subjectApi, userApi } from '../../api';
@@ -213,13 +213,24 @@ export default function StudentResultsPage() {
         onDismiss={() => setStorageRationaleOpen(false)}
       />
 
-      <PageHeader
-        title="My Grades & Performance"
-        subtitle="Review your class examination results, GPA indices, and download official report cards"
-        action={results.length > 0 ? handleDownloadPDF : null}
-        actionLabel="Download Progress Report PDF"
-        actionIcon={<PictureAsPdf />}
-      />
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <PageHeader
+          title="My Grades & Performance"
+          subtitle="Review your class examination results, GPA indices, and download official report cards"
+          action={results.length > 0 ? handleDownloadPDF : null}
+          actionLabel="Download Progress Report PDF"
+          actionIcon={<PictureAsPdf />}
+        />
+        <Button
+          variant="outlined"
+          startIcon={<Refresh />}
+          onClick={fetchData}
+          disabled={loading}
+          sx={{ borderRadius: '10px', textTransform: 'none', height: 42, minWidth: 110, mt: 1 }}
+        >
+          Refresh
+        </Button>
+      </Box>
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>

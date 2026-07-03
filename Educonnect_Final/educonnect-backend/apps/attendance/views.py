@@ -13,6 +13,8 @@ class AttendanceView(APIView):
 
     def get(self, request):
         qs = AttendanceRecord.objects.all()
+        if request.user.role == 'student':
+            qs = qs.filter(is_draft=False)
         course = request.query_params.get('course') or request.query_params.get('courseId')
         subject = request.query_params.get('subject') or request.query_params.get('subjectId')
         student = request.query_params.get('student') or request.query_params.get('studentId')
@@ -107,6 +109,8 @@ class AttendanceSummaryView(APIView):
             student_id = request.query_params.get('student') or request.query_params.get('studentId') or request.user.id
             
         qs = AttendanceRecord.objects.filter(student_id=student_id)
+        if request.user.role == 'student':
+            qs = qs.filter(is_draft=False)
         total = qs.count()
         attended = qs.filter(status__in=['Present', 'Late']).count()
         absent = qs.filter(status='Absent').count()
@@ -196,6 +200,8 @@ class AttendanceBySubjectView(APIView):
 
     def get(self, request, subject_id):
         records = AttendanceRecord.objects.filter(subject_id=subject_id)
+        if request.user.role == 'student':
+            records = records.filter(is_draft=False)
         grouped = {}
         for rec in records:
             key = (rec.date, rec.method)
@@ -219,6 +225,8 @@ class AttendanceByCourseView(APIView):
 
     def get(self, request, course_id):
         records = AttendanceRecord.objects.filter(course_id=course_id)
+        if request.user.role == 'student':
+            records = records.filter(is_draft=False)
         grouped = {}
         for rec in records:
             key = (rec.date, rec.method)
@@ -242,6 +250,8 @@ class AttendanceByStudentView(APIView):
 
     def get(self, request, student_id):
         qs = AttendanceRecord.objects.filter(student_id=student_id)
+        if request.user.role == 'student':
+            qs = qs.filter(is_draft=False)
         data = []
         for rec in qs:
             data.append({
@@ -258,6 +268,8 @@ class AttendanceReportsView(APIView):
 
     def get(self, request):
         qs = AttendanceRecord.objects.all()
+        if request.user.role == 'student':
+            qs = qs.filter(is_draft=False)
         
         course_id = request.query_params.get('courseId') or request.query_params.get('course_id') or request.query_params.get('course')
         subject_id = request.query_params.get('subjectId') or request.query_params.get('subject_id')
