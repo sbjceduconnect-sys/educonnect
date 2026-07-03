@@ -261,6 +261,9 @@ class UserDetailView(APIView):
         user = self._get_user(pk)
         if not user:
             return api_error("User not found.", status=404)
+        from core.permissions import IsAdmin
+        if not IsAdmin().has_permission(request, self) and str(request.user.id) != str(pk):
+            return api_error("Permission denied.", status=403)
         serializer = UserSerializer(user, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()

@@ -11,16 +11,16 @@ export const authApi = {
 };
 
 export const userApi = {
-  getMe: () => api.get('/users/me'),
-  getUser: (id) => api.get(`/users/${id}`),
-  listUsers: (params) => api.get('/users', { params }),
-  updateUser: (id, data) => api.put(`/users/${id}`, data),
-  uploadAvatar: (id, formData) => api.patch(`/users/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  deleteUser: (id) => api.delete(`/users/${id}`),
-  approveUser: (id) => api.patch(`/users/${id}/approve`),
-  changeRole: (id, role) => api.patch(`/users/${id}/role`, { role }),
-  bulkImport: (formData) => api.post('/users/bulk-import', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  bulkDelete: (data) => api.post('/users/bulk-delete', data),
+  getMe: () => api.get('/users/me/'),
+  getUser: (id) => api.get(`/users/${id}/`),
+  listUsers: (params) => api.get('/users/', { params }),
+  updateUser: (id, data) => api.put(`/users/${id}/`, data),
+  uploadAvatar: (id, formData) => api.patch(`/users/${id}/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  deleteUser: (id) => api.delete(`/users/${id}/`),
+  approveUser: (id) => api.patch(`/users/${id}/approve/`),
+  changeRole: (id, role) => api.patch(`/users/${id}/role/`, { role }),
+  bulkImport: (formData) => api.post('/users/bulk-import/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  bulkDelete: (data) => api.post('/users/bulk-delete/', data),
 };
 
 export const departmentApi = {

@@ -94,10 +94,12 @@ export default function ProfilePage() {
       const res = await userApi.updateUser(user.id, formData);
       if (res.data.success) {
         setUser(res.data.data);
+        sessionStorage.setItem('edu_user', JSON.stringify(res.data.data));
         setEditing(false);
-        toast.success('Profile updated!');
+        toast.success('Profile updated successfully!');
       }
     } catch (err) {
+      console.error(err);
       toast.error(err.response?.data?.message || 'Update failed');
     } finally {
       setLoading(false);

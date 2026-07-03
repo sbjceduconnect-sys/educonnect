@@ -1,3 +1,4 @@
+# pyrefly: ignore [missing-import]
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -55,6 +56,7 @@ class UserProfile(models.Model):
     guardian_phone = models.CharField(max_length=20, blank=True)
     qualification = models.CharField(max_length=200, blank=True)
     specialization = models.CharField(max_length=200, blank=True)
+    address = models.TextField(blank=True)
     academic_year = models.CharField(max_length=50, default='2026-27')
 
     class Meta:

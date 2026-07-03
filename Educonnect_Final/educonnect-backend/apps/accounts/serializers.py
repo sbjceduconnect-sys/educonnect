@@ -66,6 +66,9 @@ class UserSerializer(CamelCaseSerializer):
             instance.department_id = dept_id
             validated_data.pop('department', None)
 
+        if profile_data and 'phone' in profile_data and profile_data['phone']:
+            instance.phone = profile_data['phone']
+
         # Update user fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
