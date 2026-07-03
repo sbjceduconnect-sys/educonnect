@@ -122,17 +122,6 @@ class CourseEnrollView(APIView):
             target_id_int = int(target_id)
         except ValueError:
             return api_error("Invalid student ID format.", status=400)
-            
-        # If course.students has never been populated, seed it with default students first
-        if not course.students.exists():
-            from django.contrib.auth import get_user_model
-            User = get_user_model()
-            if course.department_id:
-                initial_students = User.objects.filter(role='student', department_id=course.department_id)
-            else:
-                initial_students = User.objects.filter(role='student')
-            if initial_students.exists():
-                course.students.add(*initial_students)
 
         course.students.remove(target_id_int)
         return api_success(message="Student removed from course.")
@@ -142,24 +131,10 @@ class CourseStudentsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
         try:
             course = Course.objects.get(pk=pk)
         except Course.DoesNotExist:
             return api_error("Course not found.", status=404)
-            
-        # If course.students has explicitly enrolled/removed records, use that.
-        # Otherwise if empty, auto-populate with matching department students.
-        if not course.students.exists():
-            if course.department_id:
-                dept_students = User.objects.filter(role='student', department_id=course.department_id)
-                if dept_students.exists():
-                    course.students.add(*dept_students)
-            if not course.students.exists():
-                all_students = User.objects.filter(role='student')
-                if all_students.exists():
-                    course.students.add(*all_students)
 
         students = course.students.filter(role='student')
         return api_success(data=UserSerializer(students, many=True).data)
