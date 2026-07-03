@@ -62,16 +62,16 @@ export const materialApi = {
 };
 
 export const assignmentApi = {
-  list: (params) => api.get('/assignments', { params }),
-  get: (id) => api.get(`/assignments/${id}`),
-  create: (formData) => api.post('/assignments', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  update: (id, formData) => api.put(`/assignments/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  delete: (id) => api.delete(`/assignments/${id}`),
-  submit: (id, formData) => api.post(`/assignments/${id}/submit`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  getSubmissions: (id) => api.get(`/assignments/${id}/submissions`),
-  gradeSubmission: (subId, data) => api.patch(`/submissions/${subId}/grade`, data),
-  downloadAssignmentFile: (id) => api.get(`/assignments/${id}/download`, { responseType: 'blob' }),
-  downloadSubmissionFile: (subId) => api.get(`/submissions/${subId}/download`, { responseType: 'blob' }),
+  list: (params) => api.get('/assignments/', { params }),
+  get: (id) => api.get(`/assignments/${id}/`),
+  create: (formData) => api.post('/assignments/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  update: (id, formData) => api.put(`/assignments/${id}/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  delete: (id) => api.delete(`/assignments/${id}/`),
+  submit: (id, formData) => api.post(`/assignments/${id}/submit/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  getSubmissions: (id) => api.get(`/assignments/${id}/submissions/`),
+  gradeSubmission: (subId, data) => api.patch(`/submissions/${subId}/grade/`, data),
+  downloadAssignmentFile: (id) => api.get(`/assignments/${id}/download/`, { responseType: 'blob' }),
+  downloadSubmissionFile: (subId) => api.get(`/submissions/${subId}/download/`, { responseType: 'blob' }),
 };
 
 export const attendanceApi = {

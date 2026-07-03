@@ -172,6 +172,11 @@ export default function TeacherAssignmentsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.dueDate) {
+      toast.error('Please select a valid due date and time.');
+      return;
+    }
+
     setActionLoading(true);
     try {
       const uploadData = new FormData();
@@ -181,7 +186,7 @@ export default function TeacherAssignmentsPage() {
         uploadData.append('file', '');
       }
       uploadData.append('title', formData.title);
-      uploadData.append('description', formData.description);
+      uploadData.append('description', formData.description || '');
       if (formData.courseId) uploadData.append('courseId', formData.courseId);
       if (formData.subjectId) uploadData.append('subjectId', formData.subjectId);
       uploadData.append('dueDate', new Date(formData.dueDate).toISOString());
@@ -201,7 +206,15 @@ export default function TeacherAssignmentsPage() {
       fetchData();
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.message || 'Failed to save assignment');
+      const backendMessage = err.response?.data?.message || err.response?.data?.detail;
+      const fieldErrors = err.response?.data?.errors;
+      let errorMsg = backendMessage || 'Failed to save assignment';
+      if (fieldErrors && typeof fieldErrors === 'object') {
+        const firstField = Object.keys(fieldErrors)[0];
+        const firstErr = Array.isArray(fieldErrors[firstField]) ? fieldErrors[firstField][0] : fieldErrors[firstField];
+        errorMsg = `${firstField}: ${firstErr}`;
+      }
+      toast.error(errorMsg);
     } finally {
       setActionLoading(false);
     }
