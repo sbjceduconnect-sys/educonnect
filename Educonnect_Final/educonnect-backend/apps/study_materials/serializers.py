@@ -24,3 +24,15 @@ class StudyMaterialSerializer(CamelCaseSerializer):
         fields = '__all__'
         read_only_fields = ['created_at', 'uploaded_by', 'file']
 
+    def to_internal_value(self, data):
+        if hasattr(data, '_mutable'):
+            data._mutable = True
+        data_dict = data.copy() if hasattr(data, 'copy') else dict(data)
+        if data_dict.get('subject_id') == '' or data_dict.get('subjectId') == '':
+            data_dict['subject_id'] = None
+            data_dict['subjectId'] = None
+        if data_dict.get('course_id') == '' or data_dict.get('courseId') == '':
+            data_dict['course_id'] = None
+            data_dict['courseId'] = None
+        return super().to_internal_value(data_dict)
+

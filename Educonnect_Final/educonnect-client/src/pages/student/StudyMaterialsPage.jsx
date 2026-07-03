@@ -190,7 +190,16 @@ export default function StudyMaterialsPage() {
       setOpenDialog(false);
       fetchData();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to upload material');
+      console.error(err);
+      const backendMessage = err.response?.data?.message || err.response?.data?.detail;
+      const fieldErrors = err.response?.data?.errors;
+      let errorMsg = backendMessage || 'Failed to upload material';
+      if (fieldErrors && typeof fieldErrors === 'object') {
+        const firstField = Object.keys(fieldErrors)[0];
+        const firstErr = Array.isArray(fieldErrors[firstField]) ? fieldErrors[firstField][0] : fieldErrors[firstField];
+        errorMsg = `${firstField}: ${firstErr}`;
+      }
+      toast.error(errorMsg);
     } finally {
       setActionLoading(false);
     }
@@ -375,7 +384,7 @@ export default function StudyMaterialsPage() {
                 labelId="select-course-label"
                 value={formData.courseId}
                 label="Select Course"
-                onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, courseId: e.target.value, subjectId: '' })}
                 sx={{ borderRadius: '10px' }}
               >
                 {courses.map((course) => (
@@ -395,11 +404,26 @@ export default function StudyMaterialsPage() {
                 onChange={(e) => setFormData({ ...formData, subjectId: e.target.value })}
                 sx={{ borderRadius: '10px' }}
               >
-                {subjects.filter(s => !isTeacher || String(s.teacherId) === String(user.id)).map((subj) => (
-                  <MenuItem key={subj.id} value={subj.id}>
-                    {subj.name} ({subj.code})
-                  </MenuItem>
-                ))}
+                {(() => {
+                  const selCourse = courses.find((c) => String(c.id) === String(formData.courseId));
+                  const courseDeptId = selCourse?.departmentId || selCourse?.department;
+                  return subjects
+                    .filter((s) => {
+                      if (isTeacher && s.teacherId && String(s.teacherId) !== String(user.id)) {
+                        return false;
+                      }
+                      if (courseDeptId) {
+                        const sDept = s.departmentId || s.department;
+                        return String(sDept) === String(courseDeptId);
+                      }
+                      return true;
+                    })
+                    .map((subj) => (
+                      <MenuItem key={subj.id} value={subj.id}>
+                        {subj.name} ({subj.code})
+                      </MenuItem>
+                    ));
+                })()}
               </Select>
             </FormControl>
 

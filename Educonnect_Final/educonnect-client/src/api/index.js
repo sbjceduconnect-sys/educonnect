@@ -52,13 +52,13 @@ export const subjectApi = {
 };
 
 export const materialApi = {
-  list: (params) => api.get('/materials', { params }),
-  get: (id) => api.get(`/materials/${id}`),
-  create: (formData) => api.post('/materials', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  update: (id, data) => api.put(`/materials/${id}`, data),
-  delete: (id) => api.delete(`/materials/${id}`),
-  download: (id) => api.get(`/materials/${id}/download`, { responseType: 'blob' }),
-  listQuestionPapers: (params) => api.get('/materials/question-papers', { params }),
+  list: (params) => api.get('/materials/', { params }),
+  get: (id) => api.get(`/materials/${id}/`),
+  create: (formData) => api.post('/materials/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  update: (id, data) => api.put(`/materials/${id}/`, data),
+  delete: (id) => api.delete(`/materials/${id}/`),
+  download: (id) => api.get(`/materials/${id}/download/`, { responseType: 'blob' }),
+  listQuestionPapers: (params) => api.get('/materials/question-papers/', { params }),
 };
 
 export const assignmentApi = {
