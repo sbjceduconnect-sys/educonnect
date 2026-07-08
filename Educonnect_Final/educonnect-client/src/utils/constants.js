@@ -1,7 +1,7 @@
 export const ROLES = { STUDENT: 'student', TEACHER: 'teacher', ADMIN: 'admin' };
 export const STREAMS = ['11th Science', '11th Commerce', '12th Science', '12th Commerce'];
 export const ATTENDANCE_STATUS = ['present', 'absent', 'late', 'excused'];
-export const EXAM_TYPES = ['mid', 'final', 'quiz', 'assignment', 'practical'];
+export const EXAM_TYPES = ['mid', 'final', 'quiz', 'assignment', 'practical', 'Unit Test 1', 'Unit Test 2'];
 export const MATERIAL_TYPES = ['note', 'pdf', 'video', 'ppt', 'question_paper'];
 export const SUBJECT_TYPES = ['theory', 'practical', 'elective'];
 export const PRIORITY_LEVELS = ['low', 'normal', 'high', 'urgent'];

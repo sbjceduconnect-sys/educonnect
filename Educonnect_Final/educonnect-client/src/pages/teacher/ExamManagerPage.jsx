@@ -273,6 +273,8 @@ export default function ExamManagerPage() {
                     <MenuItem value="quiz">Quiz</MenuItem>
                     <MenuItem value="weekly">Weekly Test</MenuItem>
                     <MenuItem value="practical">Practical</MenuItem>
+                    <MenuItem value="Unit Test 1">Unit Test 1</MenuItem>
+                    <MenuItem value="Unit Test 2">Unit Test 2</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>

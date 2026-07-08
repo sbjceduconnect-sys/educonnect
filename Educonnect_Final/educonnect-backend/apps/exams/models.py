@@ -12,6 +12,10 @@ class Exam(models.Model):
         ('Weekly Test', 'Weekly Test'),
         ('assignment', 'assignment'),
         ('practical', 'practical'),
+        ('unit_test_1', 'Unit Test 1'),
+        ('unit_test_2', 'Unit Test 2'),
+        ('Unit Test 1', 'Unit Test 1'),
+        ('Unit Test 2', 'Unit Test 2'),
     ]
     title     = models.CharField(max_length=200)
     course    = models.ForeignKey('courses.Course', on_delete=models.CASCADE, related_name='exams')
